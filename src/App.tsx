@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { Routes, Route, Link } from "react-router-dom";
+import Login from "./view/Login.tsx";
+import Home from "./view/Home.tsx";
 import './App.css'
 
 function App() {
@@ -11,26 +12,20 @@ function App() {
 
   return (
     <>
-      <div className="bg-blue-500">
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1 className='text-amber-600 font-black text-xl'>Vite + React</h1>
       <div>
-        <button className='bg-red-500' onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+        {/* Menú de navegación
+        <nav>
+          <Link to="/">Login</Link> |{" "}
+          <Link to="/home">Acerca de</Link> |{" "}
+          <Link to="/contact">Contacto</Link>
+        </nav> */}
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/home" element={<Home />} />
+          {/* <Route path="/contact" element={<Contact />} />  */}
+          <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
+        </Routes>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }

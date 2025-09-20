@@ -1,7 +1,10 @@
 #root {
   max-width: 1280px;
+  overflow: none;
   margin: 0 auto;
-  padding: 2rem;
+  font-family: Impact, 'Arial Narrow Bold', sans-serif, -apple-system,
+    BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   text-align: center;
 }
 
