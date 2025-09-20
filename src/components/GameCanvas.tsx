@@ -15,6 +15,16 @@ type Player = Phaser.Physics.Arcade.Sprite & {
 };
 
 class GameScene extends Phaser.Scene {
+
+    preload() {
+        this.load.spritesheet('player_idle', 'Mexico_Idle.png', { frameWidth: 512, frameHeight: 512 });
+        this.load.spritesheet('player_walk', 'Mexico_Walk.png', { frameWidth: 512, frameHeight: 512 });
+        this.load.spritesheet('player_kick', 'Mexico_kick.png', { frameWidth: 512, frameHeight: 512 });
+        this.load.spritesheet('player_jump_n_kick', 'Mexico_jump_n_kick.png', { frameWidth: 512, frameHeight: 512 });
+        this.load.image('ball', 'ball.png');
+        this.load.image('background', 'Background.png');
+    }
+
     // Usamos '!' para asegurar a TypeScript que estas propiedades serán inicializadas.
     private player1!: Player;
     private player2!: Player;
@@ -34,7 +44,7 @@ class GameScene extends Phaser.Scene {
     private scoreRight: number = 0;
     private scoreText!: Phaser.GameObjects.Text;
     private goalText!: Phaser.GameObjects.Text;
-    
+
 
     constructor() {
         super({ key: 'GameScene' });
@@ -47,35 +57,43 @@ class GameScene extends Phaser.Scene {
         this.add.rectangle(this.scale.width / 2, this.scale.height - 25, this.scale.width, 50, 0x228B22);
 
         // Jugador 1 (Rojo)
-        this.player1 = this.physics.add.sprite(this.scale.width * 0.25, this.scale.height / 1.2, '') as Phaser.Physics.Arcade.Sprite & { facing: 'left' | 'right' };
-        this.player1.setSize(80, 100).setDisplaySize(80, 100).setTint(0xff0000);
+        this.player1 = this.physics.add.sprite(this.scale.width * 0.25, this.scale.height / 1.2, 'player_idle') as Player & { facing: 'left' | 'right' };
+        this.player1.setSize(320, 512).setDisplaySize(256, 256);
         this.player1.setCollideWorldBounds(true);
         this.player1.setMass(100);
         this.player1.setDamping(true);
-        this.player1.setDrag(0.98);
+        this.player1.setDrag(1);
         this.player1.facing = 'right';
         this.player1.canDash = true; this.player1.isDashing = false;
 
         // Jugador 2 (Azul)
-        this.player2 = this.physics.add.sprite(this.scale.width * 0.75, this.scale.height / 1.2, '') as Phaser.Physics.Arcade.Sprite & { facing: 'left' | 'right' };
-        this.player2.setSize(80, 100).setDisplaySize(80, 100).setTint(0x0000ff);
+        this.player2 = this.physics.add.sprite(this.scale.width * 0.75, this.scale.height / 1.2, 'player_idle') as Player & { facing: 'left' | 'right' };
+        this.player2.setSize(320, 512).setDisplaySize(256, 256);
         this.player2.setCollideWorldBounds(true).setMass(100);
         this.player2.setDamping(true);
-        this.player2.setDrag(0.98);
+        this.player2.setDrag(1);
         this.player2.facing = 'left';
+        this.player2.setFlipX(true);
         this.player2.canDash = true; this.player2.isDashing = false;
 
         // Balón
-        this.ball = this.physics.add.sprite(this.scale.width / 2, this.scale.height / 3, '');
-        this.ball.setSize(64, 64).setDisplaySize(64, 64);
-        this.ball.setCircle(32);
+        this.ball = this.physics.add.sprite(this.scale.width / 2, this.scale.height / 3, 'ball') as Phaser.Physics.Arcade.Sprite;
+        this.ball.setSize(100, 100).setDisplaySize(80, 80);
+        this.ball.setCircle(50);
         this.ball.setCollideWorldBounds(true).setBounce(0.7).setMass(100).setDrag(50, 50);
-        this.ball.setFriction(200); 
+        this.ball.setFriction(200);
 
-        // 1. SOLUCIÓN: ACTIVAMOS EL "MODO DE ALTA PRECISIÓN" PARA EL BALÓN
-        // Esto fuerza al motor a ser mucho más cuidadoso con este objeto específico.
-        //const ballBody = this.ball.body as Phaser.Physics.Arcade.Body;
-        //ballBody.syncBounds = true; // Asegura que la hitbox se actualice perfectamente
+        // Fondo
+        const bg = this.add.image(this.scale.width / 2, this.scale.height / 2, 'background');
+        bg.setDisplaySize(this.scale.width, this.scale.height);
+        bg.setDepth(-1);
+
+        // --- ANIMACIONES ---
+        this.anims.create({ key: 'idle', frames: this.anims.generateFrameNumbers('player_idle', { start: 0, end: 23 }), frameRate: 24, repeat: -1 });
+        this.anims.create({ key: 'walk', frames: this.anims.generateFrameNumbers('player_walk', { start: 0, end: 14 }), frameRate: 24, repeat: -1 });
+        this.anims.create({ key: 'kick', frames: this.anims.generateFrameNumbers('player_kick', { start: 1, end: 11 }), frameRate: 24, repeat: 0 });
+        this.anims.create({ key: 'jump', frames: this.anims.generateFrameNumbers('player_jump_n_kick', { start: 1, end: 8 }), frameRate: 24, repeat: 0 });
+        this.anims.create({ key: 'jump_kick', frames: this.anims.generateFrameNumbers('player_jump_n_kick', { start: 10, end: 18 }), frameRate: 24, repeat: 0 });
 
 
         // --- CREACIÓN DE PORTERÍAS Y MARCADOR ---
@@ -125,6 +143,7 @@ class GameScene extends Phaser.Scene {
         this.keyK = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.K);
         this.spaceKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.shiftKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+
     }
 
     // --- FUNCIONES PARA EL PARTIDO ---
@@ -202,11 +221,11 @@ class GameScene extends Phaser.Scene {
         const otherPlayer = playerSprite === this.player1 ? this.player2 : this.player1;
         // Calculamos la distancia entre el balón y el OTRO jugador
         const distanceToOtherPlayer = Phaser.Math.Distance.Between(ballSprite.x, ballSprite.y, otherPlayer.x, otherPlayer.y);
-        
+
         // Si el otro jugador está muy cerca (umbral de "sándwich")
         if (distanceToOtherPlayer < 180) {
             // Le decimos a Phaser que ignore su física por defecto
-            
+
             // Aplicamos nuestra propia física: un fuerte impulso hacia arriba para escapar.
             ballSprite.body!.velocity.y = -1800;
             // Damos un pequeño empujón horizontal aleatorio para que no sea predecible
@@ -224,38 +243,47 @@ class GameScene extends Phaser.Scene {
     private performDash(player: Player) {
         if (!player.canDash) return;
         player.canDash = false; player.isDashing = true;
-        
+
         const dashSpeed = player.body!.blocked.down ? 1000 : 1600;
         const dashVelocity = player.facing === 'right' ? dashSpeed : -dashSpeed;
         player.setVelocity(dashVelocity, 0);
 
         // Efecto de estela mejorado
         this.time.addEvent({
-            delay: 40,
-            repeat: 5,
-            callback: () => {
-                const ghost = this.add.sprite(player.x, player.y, '')
-                    .setTint(player.tintTopLeft)
-                    .setAlpha(0.5)
-                    .setDisplaySize(player.width, player.height);
+        delay: 40,
+        repeat: 5,
+        callback: () => {
+            // 1. CAPTURAMOS EL ESTADO ACTUAL DEL JUGADOR
+            const currentTextureKey = player.texture.key; // Ej: 'player_walk'
+            const currentFrameName = player.frame.name;   // Ej: 3
+            const currentFlipX = player.flipX;
+            const currentTint = player.tintTopLeft; // El tint del sprite se guarda aquí
 
-                this.tweens.add({
-                    targets: ghost,
-                    alpha: 0,
-                    duration: 400,
-                    onComplete: () => ghost.destroy()
-                });
-            }
-        });
+            // 2. CREAMOS EL FANTASMA USANDO LA "FOTO" QUE TOMAMOS
+            const ghost = this.add.sprite(player.x, player.y, currentTextureKey, currentFrameName)
+                .setTint(currentTint)
+                .setAlpha(0.3)
+                .setDisplaySize(player.displayWidth, player.displayHeight) 
+                .setFlipX(currentFlipX);
+
+            // 3. ANIMAMOS LA DESAPARICIÓN DEL FANTASMA
+            this.tweens.add({
+                targets: ghost,
+                alpha: 0,
+                duration: 400,
+                onComplete: () => ghost.destroy()
+            });
+        }
+    });
 
         this.time.delayedCall(250, () => { player.isDashing = false; });
         this.time.delayedCall(1000, () => { player.canDash = true; });
     }
 
-     private performKick(player: Player, ball: Phaser.Physics.Arcade.Sprite) {
-        const kickPosX = player.facing === 'right' ? player.x + 120 : player.x - 120;
-        const kickPosY = player.y + 100;
-        const kickZone = this.add.zone(kickPosX, kickPosY, 80, 60);
+    private performKick(player: Player, ball: Phaser.Physics.Arcade.Sprite) {
+        const kickPosX = player.facing === 'right' ? player.x + 110 : player.x - 110;
+        const kickPosY = player.y + 80;
+        const kickZone = this.add.zone(kickPosX, kickPosY, 60, 100);
         this.physics.world.enable(kickZone);
         (kickZone.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
         const overlap = this.physics.add.overlap(kickZone, ball, (_zone, b) => {
@@ -271,26 +299,84 @@ class GameScene extends Phaser.Scene {
 
 
     update() {
-        // --- CONTROLES JUGADOR 1 ---
-        if (!this.player1.isDashing) {
-            if (this.keysP1.A.isDown) { this.player1.setVelocityX(-400); this.player1.facing = 'left'; }
-            else if (this.keysP1.D.isDown) { this.player1.setVelocityX(400); this.player1.facing = 'right'; }
-            else { this.player1.setVelocityX(0); }
-            if (this.keysP1.W.isDown && this.player1.body!.blocked.down) { this.player1.setVelocityY(-900); }
-            if (Phaser.Input.Keyboard.JustDown(this.shiftKey)) { this.performDash(this.player1); }
-            if (Phaser.Input.Keyboard.JustDown(this.spaceKey)) { this.performKick(this.player1, this.ball); }
+        this.handlePlayerControls(this.player1, this.keysP1, this.spaceKey, this.shiftKey);
+        this.handlePlayerControls(this.player2, this.cursors, this.keyK, this.keyJ);
+
+    }
+
+    handlePlayerControls(
+        player: Player,
+        keys: { [key: string]: Phaser.Input.Keyboard.Key } | Phaser.Types.Input.Keyboard.CursorKeys,
+        kickKey: Phaser.Input.Keyboard.Key,
+        dashKey: Phaser.Input.Keyboard.Key
+    ) {
+        if (player.isDashing) return; // Si está en dash, no hacer nada más
+
+        const onGround = player.body!.blocked.down;
+
+        // Determina las teclas de movimiento según el tipo de objeto 'keys'
+        let leftKey: Phaser.Input.Keyboard.Key | undefined;
+        let rightKey: Phaser.Input.Keyboard.Key | undefined;
+        let upKey: Phaser.Input.Keyboard.Key | undefined;
+
+        if ('A' in keys && 'D' in keys && 'W' in keys) {
+            // Custom key mapping (Jugador 1)
+            leftKey = keys['A'];
+            rightKey = keys['D'];
+            upKey = keys['W'];
+        } else {
+            // Cursor keys (Jugador 2)
+            leftKey = (keys as Phaser.Types.Input.Keyboard.CursorKeys).left;
+            rightKey = (keys as Phaser.Types.Input.Keyboard.CursorKeys).right;
+            upKey = (keys as Phaser.Types.Input.Keyboard.CursorKeys).up;
         }
 
-        // --- CONTROLES JUGADOR 2 ---
-        if (!this.player2.isDashing) {
-            if (this.cursors.left.isDown) { this.player2.setVelocityX(-400); this.player2.facing = 'left'; }
-            else if (this.cursors.right.isDown) { this.player2.setVelocityX(400); this.player2.facing = 'right'; }
-            else { this.player2.setVelocityX(0); }
-            if (this.cursors.up.isDown && this.player2.body!.blocked.down) { this.player2.setVelocityY(-900); }
-            if (Phaser.Input.Keyboard.JustDown(this.keyJ)) { this.performDash(this.player2); }
-            if (Phaser.Input.Keyboard.JustDown(this.keyK)) { this.performKick(this.player2, this.ball); }
+
+         // --- LÓGICA DE MOVIMIENTO (INSPIRADA EN TU CÓDIGO ORIGINAL) ---
+        // Esta sección se encarga únicamente de la velocidad.
+        if (leftKey.isDown) {
+            player.setVelocityX(-400).setFlipX(true);
+            player.facing = 'left';
+        } else if (rightKey.isDown) {
+            player.setVelocityX(400).setFlipX(false);
+            player.facing = 'right';
+        } else {
+            player.setVelocityX(0);
+        }
+
+        // --- ESTADOS DE ANIMACIÓN ---
+        // Esta sección se encarga únicamente de decidir qué animación mostrar.
+        const currentAnim = player.anims.currentAnim?.key;
+        if (['kick', 'jump_kick', 'jump'].includes(currentAnim || '') && player.anims.isPlaying) {
+            // No hacemos nada, dejamos que la animación actual continúe.
+        } else {
+            if (onGround) {
+                if (leftKey.isDown || rightKey.isDown) {
+                    player.play('walk', true);
+                } else {
+                    player.play('idle', true);
+                }
+            } else {
+                player.play({ key: 'jump' });
+                player.anims.setProgress(1) // Detiene el último frame
+            }
+        }
+        // --- LÓGICA DE SALTO ---
+        if (upKey && upKey.isDown && onGround) {
+            player.setVelocityY(-900);
+            player.play('jump', true); 
+        }
+        // --- LÓGICA DE ACCIONES (EVENTOS DE UN SOLO PULSO) ---
+        if (Phaser.Input.Keyboard.JustDown(kickKey)) {
+            player.play(onGround ? 'kick' : 'jump_kick', true);
+            this.performKick(player, this.ball);
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(dashKey)) {
+            this.performDash(player);
         }
     }
+
 }
 
 const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({ isPaused, resetTrigger }, ref) => {
