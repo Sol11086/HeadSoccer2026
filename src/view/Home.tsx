@@ -14,7 +14,12 @@ import user from '/img/User.png'
 function App() {
   const [count, setCount] = useState(0)
   const [showDrawer, setShowDrawer] = useState(false);
+  const [showDrawerConfiguration, setShowDrawerConfiguration] = useState(false);
+  const [showDrawerAwards, setShowDrawerAwards] = useState(false);
+  const [showDialogInfo, setShowDialogInfo] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [isOpenInfo, setIsOpenInfo] = useState(false);
 
   return (
     <>
@@ -62,7 +67,8 @@ function App() {
           <div className='flex items-center gap-10'>
             <button
               type="button"
-              className="stroke-2 stroke-[#1F1B1B] text-gray-700">
+              className="stroke-2 stroke-[#1F1B1B] text-gray-700"
+              onClick={() => setIsOpenInfo(true)} >
               <UserIcon className="h-12 w-12 text-[#808CB7] " />
             </button>
             <button type="button" className="cursor-pointer" onClick={() => (window.location.href = "/")}>
@@ -101,215 +107,102 @@ function App() {
             {showDrawer && (
               <motion.div
                 key="second"
-                className="absolute inset-0 flex justify-center items-center"
+                className="absolute inset-0 flex flex-col justify-center items-center bg-transparent"
                 initial={{ x: -1500, opacity: 1 }}
                 animate={{ x: -500, opacity: 1 }}
                 exit={{ x: -1500, opacity: 1 }}
                 transition={{ duration: 1, ease: "easeInOut" }}
-
               >
-                <img src={drawer} alt="Drawer" className="w-2/4" />
+                <img src={drawer} alt="Drawer" />
+
+                {/* Botón de cerrar */}
                 <button
                   onClick={() => setShowDrawer(false)}
-                  className="fixed top-30 right-135 text-4xl font-black text-white h-20 rounded"
+                  className="text-4xl font-black text-white h-20 rounded"
                 >
                   ✖
                 </button>
-                <div className='fixed flex gap-6'>
+
+                {/* Grid de personajes */}
+                <div className="absolute grid grid-cols-3 gap-6 mt-6">
+                  {[...Array(6)].map((_, index) => (
+                    <div key={index} className="relative group">
+                      <button onClick={() => setShowDrawer(false)} className="fixed top-30 right-135 text-4xl font-black text-white h-20 rounded" > ✖ </button>
+                      <motion.button
+                        className={`w-32 h-40 bg-cover bg-center rounded-xl transition-all duration-200`}
+                        style={{
+                          backgroundImage:
+                            selectedIndex === index
+                              ? "url('/img/character_selected.png')"
+                              : "url('/img/character.png')",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (selectedIndex !== index) {
+                            e.currentTarget.style.backgroundImage =
+                              "url('/img/character_hover.png')";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (selectedIndex !== index) {
+                            e.currentTarget.style.backgroundImage =
+                              "url('/img/character.png')";
+                          }
+                        }}
+                        initial={{ opacity: 1, scale: 1 }}
+                        animate={{ opacity: 1, scale: [1, 1.05, 1] }}
+                        transition={{
+                          duration: 0.8,
+                          times: [0, 0.5, 1],
+                          ease: "easeInOut",
+                          repeat: Infinity,
+                          repeatDelay: 2,
+                        }}
+                        onClick={() => setSelectedIndex(index)}
+                      />
+
+                      {/* Tooltip */}
+                      <span
+                        className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white 
+                        text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 
+                        transition-opacity duration-300 pointer-events-none whitespace-nowrap"
+                      >
+                        Santiago Giménez
+                      </span>
+                    </div>
+                  ))}
                   <motion.button
-                    className="fixed z-10 w-40 h-50 bg-cover bg-center transition active:scale-95 cursor-pointer"
-                    style={{
-                      backgroundImage: isSelected
-                        ? "url('/img/character_selected.png')"
-                        : "url('/img/character.png')",
-                    }}
-                    onMouseOver={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.backgroundImage =
-                          "url('/img/character_hover.png')";
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.backgroundImage = "url('/img/character.png')";
-                      }
-                    }}
-                    initial={{ opacity: 1, scale: 1 }}
-                    animate={{ opacity: 1, scale: [1, 1.08, 1] }}
-                    transition={{
-                      duration: 0.8,
-                      times: [0, 0.5, 1],
-                      ease: "easeInOut",
-                    }}
-                    onClick={() => setIsSelected(!isSelected)}
-                  />
-                  <motion.button
-                    className="fixed z-10 w-40 h-50 bg-cover bg-center transition active:scale-95 cursor-pointer"
-                    style={{
-                      backgroundImage: isSelected
-                        ? "url('/img/character_selected.png')"
-                        : "url('/img/character.png')",
-                    }}
-                    onMouseOver={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.backgroundImage =
-                          "url('/img/character_hover.png')";
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.backgroundImage = "url('/img/character.png')";
-                      }
-                    }}
-                    initial={{ opacity: 1, scale: 1 }}
-                    animate={{ opacity: 1, scale: [1, 1.08, 1] }}
-                    transition={{
-                      duration: 0.8,
-                      times: [0, 0.5, 1],
-                      ease: "easeInOut",
-                    }}
-                    onClick={() => setIsSelected(!isSelected)}
-                  />
-                  <motion.button
-                    className="fixed z-10 w-40 h-50 bg-cover bg-center transition active:scale-95 cursor-pointer"
-                    style={{
-                      backgroundImage: isSelected
-                        ? "url('/img/character_selected.png')"
-                        : "url('/img/character.png')",
-                    }}
-                    onMouseOver={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.backgroundImage =
-                          "url('/img/character_hover.png')";
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (!isSelected) {
-                        e.currentTarget.style.backgroundImage = "url('/img/character.png')";
-                      }
-                    }}
-                    initial={{ opacity: 1, scale: 1 }}
-                    animate={{ opacity: 1, scale: [1, 1.08, 1] }}
-                    transition={{
-                      duration: 0.8,
-                      times: [0, 0.5, 1],
-                      ease: "easeInOut",
-                    }}
-                    onClick={() => setIsSelected(!isSelected)}
-                  />
+                    whileTap={{ scale: 0.95 }}
+                    className="mt-10 px-10 py-3 bg-[#ff5f57] text-white text-xl font-bold rounded-2xl shadow-lg hover:bg-[#ff3b2f] transition-colors"
+                  >
+                    Cambiar
+                  </motion.button>
                 </div>
-
-                <motion.button
-                  className="fixed z-10 w-40 h-50 bg-cover bg-center transition active:scale-95 cursor-pointer"
-                  style={{
-                    backgroundImage: isSelected
-                      ? "url('/img/character_selected.png')"
-                      : "url('/img/character.png')",
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isSelected) {
-                      e.currentTarget.style.backgroundImage =
-                        "url('/img/character_hover.png')";
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    if (!isSelected) {
-                      e.currentTarget.style.backgroundImage = "url('/img/character.png')";
-                    }
-                  }}
-                  initial={{ opacity: 1, scale: 1 }}
-                  animate={{ opacity: 1, scale: [1, 1.08, 1] }}
-                  transition={{
-                    duration: 0.8,
-                    times: [0, 0.5, 1],
-                    ease: "easeInOut",
-                  }}
-                  onClick={() => setIsSelected(!isSelected)}
-                />
-                <motion.button
-                  className="fixed z-10 w-40 h-50 bg-cover bg-center transition active:scale-95 cursor-pointer"
-                  style={{
-                    backgroundImage: isSelected
-                      ? "url('/img/character_selected.png')"
-                      : "url('/img/character.png')",
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isSelected) {
-                      e.currentTarget.style.backgroundImage =
-                        "url('/img/character_hover.png')";
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    if (!isSelected) {
-                      e.currentTarget.style.backgroundImage = "url('/img/character.png')";
-                    }
-                  }}
-                  initial={{ opacity: 1, scale: 1 }}
-                  animate={{ opacity: 1, scale: [1, 1.08, 1] }}
-                  transition={{
-                    duration: 0.8,
-                    times: [0, 0.5, 1],
-                    ease: "easeInOut",
-                  }}
-                  onClick={() => setIsSelected(!isSelected)}
-                />
-                <motion.button
-                  className="fixed z-10 w-40 h-50 bg-cover bg-center transition active:scale-95 cursor-pointer"
-                  style={{
-                    backgroundImage: isSelected
-                      ? "url('/img/character_selected.png')"
-                      : "url('/img/character.png')",
-                  }}
-                  onMouseOver={(e) => {
-                    if (!isSelected) {
-                      e.currentTarget.style.backgroundImage =
-                        "url('/img/character_hover.png')";
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    if (!isSelected) {
-                      e.currentTarget.style.backgroundImage = "url('/img/character.png')";
-                    }
-                  }}
-                  initial={{ opacity: 1, scale: 1 }}
-                  animate={{ opacity: 1, scale: [1, 1.08, 1] }}
-                  transition={{
-                    duration: 0.8,
-                    times: [0, 0.5, 1],
-                    ease: "easeInOut",
-                  }}
-                  onClick={() => setIsSelected(!isSelected)}
-                />
-                <span className="absolute -top-8-translate-x-1/2 whitespace-nowrap bg-black 
-                   text-white text-sm px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                  Santiago Giménez
-                </span>
               </motion.div>
-
             )}
           </AnimatePresence>
-
           <div className="flex w-1/2 h-full justify-center items-center">
-            <div className='flex flex-col items-center justify-center gap-10'>
-              <motion.button
-                className="z-10 w-110 h-40 bg-cover bg-center transition active:scale-95 cursor-pointer"
-                style={{ backgroundImage: `url('/img/btn_1jugador.png')`, }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_1jugador_hover.png')")}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_1jugador.png')")}
-                initial={{ opacity: 1, scale: 1 }}
-                animate={{ opacity: 1, scale: [1, 1.08, 1] }}
-                transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
-              />
-              <motion.button
-                className="z-10 w-110 h-40 bg-cover bg-center transition active:scale-95 cursor-pointer"
-                style={{ backgroundImage: `url('/img/btn_2jugadores.png')`, }}
-                onMouseOver={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_2jugadores_hover.png')")}
-                onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_2jugadores.png')")}
-                initial={{ opacity: 1, scale: 1 }}
-                animate={{ opacity: 1, scale: [1, 1.08, 1] }}
-                transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
-              />
-            </div>
+            {!showDrawerConfiguration && !showDrawerAwards && (
+              <div className='flex flex-col items-center justify-center gap-10'>
+                <motion.button
+                  className="z-10 w-110 h-40 bg-cover bg-center transition active:scale-95 cursor-pointer"
+                  style={{ backgroundImage: `url('/img/btn_1jugador.png')`, }}
+                  onMouseOver={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_1jugador_hover.png')")}
+                  onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_1jugador.png')")}
+                  initial={{ opacity: 1, scale: 1 }}
+                  animate={{ opacity: 1, scale: [1, 1.08, 1] }}
+                  transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
+                />
+                <motion.button
+                  className="z-10 w-110 h-40 bg-cover bg-center transition active:scale-95 cursor-pointer"
+                  style={{ backgroundImage: `url('/img/btn_2jugadores.png')`, }}
+                  onMouseOver={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_2jugadores_hover.png')")}
+                  onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_2jugadores.png')")}
+                  initial={{ opacity: 1, scale: 1 }}
+                  animate={{ opacity: 1, scale: [1, 1.08, 1] }}
+                  transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
+                />
+              </div>
+            )}
             <div className='fixed bottom-4 gap-10 flex flex-col right-4 mr-10 mb-10'>
               <motion.button
                 className="relative z-10 w-20 h-20 bg-cover bg-center transition active:scale-95 cursor-pointer"
@@ -319,6 +212,7 @@ function App() {
                 initial={{ opacity: 1, scale: 1 }}
                 animate={{ opacity: 1, scale: [1, 1.08, 1] }}
                 transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
+                onClick={() => setShowDrawerAwards(true)}
               />
               <motion.button
                 className="relative z-10 w-20 h-20 bg-cover bg-center transition active:scale-95 cursor-pointer"
@@ -328,12 +222,97 @@ function App() {
                 initial={{ opacity: 1, scale: 1 }}
                 animate={{ opacity: 1, scale: [1, 1.08, 1] }}
                 transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
+                onClick={() => setShowDrawerConfiguration(true)}
               />
             </div>
           </div>
+          <AnimatePresence>
+            {showDrawerConfiguration && (
+              <motion.div
+                key="second"
+                className="absolute inset-0 flex flex-col justify-center items-center bg-transparent"
+                initial={{ x: 1500, opacity: 1 }}
+                animate={{ x: 500, opacity: 1 }}
+                exit={{ x: 1500, opacity: 1 }}
+                transition={{ duration: 1, ease: "easeInOut" }}
+              >
+                  <img src={drawer} alt="Drawer" />
+                  <button
+                    onClick={() => setShowDrawerConfiguration(false)}
+                    className="absolute top-25 left-135 text-4xl font-black text-white h-20 rounded"
+                  >
+                    ✖
+                  </button>
+                  <div className='absolute flex flex-col items-center justify-center gap-10'>
+                    <motion.button
+                      className="z-10 w-110 h-40 bg-cover bg-center transition active:scale-95 cursor-pointer"
+                      style={{ backgroundImage: `url('/img/btn_ctrl.png')`, }}
+                      onMouseOver={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_ctrl_hover.png')")}
+                      onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_ctrl.png')")}
+                      initial={{ opacity: 1, scale: 1 }}
+                      animate={{ opacity: 1, scale: [1, 1.08, 1] }}
+                      transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
+                    />
+                    <motion.button
+                      className="z-10 w-110 h-40 bg-cover bg-center transition active:scale-95 cursor-pointer"
+                      style={{ backgroundImage: `url('/img/btn_volumen.png')`, }}
+                      onMouseOver={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_volumen_hover.png')")}
+                      onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_volumen.png')")}
+                      initial={{ opacity: 1, scale: 1 }}
+                      animate={{ opacity: 1, scale: [1, 1.08, 1] }}
+                      transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
+                    />
+                  </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {showDrawerAwards && (
+              <motion.div
+                key="second"
+                className="absolute inset-0 flex flex-col justify-center items-center bg-transparent"
+                initial={{ x: 1500, opacity: 1 }}
+                animate={{ x: 500, opacity: 1 }}
+                exit={{ x: 1500, opacity: 1 }}
+                transition={{ duration: 1, ease: "easeInOut" }}
+              >
+                <img src={drawer} alt="Drawer" />
+                <button
+                  onClick={() => setShowDrawerAwards(false)}
+                  className="absolute top-25 left-135 text-4xl font-black text-white h-20 rounded"
+                >
+                  ✖
+                </button>
+                <div className='absolute flex flex-col items-center justify-center gap-10'>
+                  awards
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+        {isOpenInfo && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center">
+            {/* Fondo oscuro */}
+            <div
+              className="absolute inset-0 bg-black bg-opacity-5"
+              onClick={() => setIsOpenInfo(false)}
+            ></div>
 
-
+            {/* Contenido del modal */}
+            <div className="relative bg-white w-11/12 max-w-md p-6 rounded-lg shadow-lg z-10">
+              <h2 className="text-2xl font-bold mb-4">Mi Diálogo</h2>
+              <p className="mb-4">
+                Este es el contenido del diálogo. Puedes poner lo que quieras aquí.
+              </p>
+              <button
+                className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+                onClick={() => setIsOpenInfo(false)}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   )
