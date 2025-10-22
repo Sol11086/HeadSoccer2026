@@ -199,6 +199,7 @@ function App() {
                   onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_2jugadores.png')")}
                   initial={{ opacity: 1, scale: 1 }}
                   animate={{ opacity: 1, scale: [1, 1.08, 1] }}
+                  onClick={() => (window.location.href = "/game")}
                   transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
                 />
               </div>
