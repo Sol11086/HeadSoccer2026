@@ -1,11 +1,10 @@
-import { useState } from 'react'
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Login from "./view/Login.tsx";
 import Home from "./view/Home.tsx";
+import SecurityPath from "./components/SecurityPath.tsx";
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
 
   //USAR App.tsx para establecer las rutas de la aplicacion
   //  cuando ya se tengan las vistas no hacer vistas aqui
@@ -21,8 +20,14 @@ function App() {
         </nav> */}
         <Routes>
           <Route path="/" element={<Login />} />
-          <Route path="/home" element={<Home />} />
-          {/* <Route path="/contact" element={<Contact />} />  */}
+          <Route 
+            path="/home" 
+            element={
+              <SecurityPath>
+                <Home />
+              </SecurityPath>
+            } 
+          />
           <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
         </Routes>
       </div>
