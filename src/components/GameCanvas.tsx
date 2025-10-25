@@ -1,5 +1,6 @@
 import { useEffect, useRef, forwardRef } from 'react';
 import Phaser from 'phaser';
+import Pause from './pause';
 
 interface GameCanvasProps {
     isPaused: boolean;
@@ -15,7 +16,7 @@ type Player = Phaser.Physics.Arcade.Sprite & {
 };
 
 class GameScene extends Phaser.Scene {
-
+    
     preload() {
         this.load.spritesheet('player_idle', 'Mexico_Idle.png', { frameWidth: 512, frameHeight: 512 });
         this.load.spritesheet('player_walk', 'Mexico_Walk.png', { frameWidth: 512, frameHeight: 512 });
@@ -381,6 +382,7 @@ class GameScene extends Phaser.Scene {
 
 const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({ isPaused, resetTrigger }, ref) => {
     const gameRef = useRef<Phaser.Game | null>(null);
+     <Pause />
 
     // useEffect para crear y destruir el juego
     useEffect(() => {

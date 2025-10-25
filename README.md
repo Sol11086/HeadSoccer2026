@@ -1,3 +1,31 @@
+# Notas del autor 
+
+# KickHeadz-FRONTEND
+Proyectoprograweb2 ahora si el canon de front
+
+# Autores 
+Victor Hugo Molina Ruiz
+Sofia De La Fuente Avila 
+
+# Descripcion del proyecto
+Este es el Front del proyecto de KickHeadz , el cual ayuda a la funcionalidad de la app
+hecho con las siguientes tecnologias 
+-React
+-Axios
+-Taildwind
+
+# Descripción de las carpetas
+Las carpetas principales dentro de "src" , son la de componentes donde se encuentran los componentes de la app
+api donde esta el archivo con la función que regula la llamada de servicios
+view , las vistas principales de la app
+
+# Instrucciones de arranque 
+Descargar el repositorio
+Añadir las variables de entorno (Ruta que se utilice para el back) 
+Tener ya el proyecto de back activo y funcional
+Usar " npm install " desde carpeta raiz 
+Despues usar " npm run dev " desde carpeta raiz 
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -66,4 +94,5 @@ export default tseslint.config([
     },
   },
 ])
+
 ```

@@ -24,11 +24,12 @@ function App() {
   };
 
   const handleSave = () => {
-    console.log({ musicVolume, systemVolume });}
-  
+    console.log({ musicVolume, systemVolume });
+  }
+
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [isOpenInfo, setIsOpenInfo] = useState(false);
- 
+
 
   return (
     <>
@@ -38,25 +39,25 @@ function App() {
           alt="Fondo"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        
+
         <div>
           <Navbar />
         </div>
 
         <div className="w-screen h-screen flex overflow-hidden">
           <motion.div
-            className="w-3/5 flex flex-col justify-center items-center pl-8"
+            className="w-3/6 flex flex-col justify-center items-center pl-8"
             initial={{ x: -300, y: 70, opacity: 0 }}
             animate={{ x: -150, y: 70, opacity: 1 }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
-            <img src={country} alt="character" className='fixed z-10 w-50 top-43 left-20 ' />
+            <img src={country} alt="character" className='fixed z-10 top-25 left-30 w-50' />
             <img src={player} alt="character" className='fixed h-100 w-100' />
             <input
               type="text"
               readOnly
               value="Santiago Gimenez"
-              className=" fixed top-35 text-center h-14 p-2 w-1/2 items-start text-white text-2xl rounded-xl bg-[#1F1B1B] outline-none"
+              className=" fixed text-center h-14 p-2 w-1/2 top-35 items-start text-white text-2xl rounded-xl bg-[#1F1B1B] outline-none"
             />
             <motion.button
               className="fixed bottom-25 z-10 w-30 h-30 bg-cover bg-center transition active:scale-95 cursor-pointer"
@@ -129,11 +130,15 @@ function App() {
                     </div>
                   ))}
                   <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    className="mt-10 px-10 py-3 bg-[#ff5f57] text-white text-xl font-bold rounded-2xl shadow-lg hover:bg-[#ff3b2f] transition-colors"
-                  >
-                    Cambiar
-                  </motion.button>
+                    className="z-10 absolute w-55 h-20 top-120 bg-cover transition active:scale-95 cursor-pointer"
+                    style={{ backgroundImage: `url('/img/btn_cambiar.png')`, }}
+                    onMouseOver={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_cambiar_hover.png')")}
+                    onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_cambiar.png')")}
+                    initial={{ opacity: 1, scale: 1 }}
+                    onClick={() => setShowDrawer(false)}
+                    animate={{ opacity: 1, scale: [1, 1.08, 1] }}
+                    transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
+                  />
                 </div>
               </motion.div>
             )}

@@ -1,5 +1,5 @@
 import GameCanvas from './GameCanvas';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const PauseIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -28,13 +28,24 @@ function Pause() {
         handleResume(); // Reanudamos el juego después de resetear
     };
 
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key.toLowerCase() === 'p') {
+                // Ejecuta la misma lógica que handlePause
+                setIsPaused(true);
+                canvasRef.current?.blur();
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, []);
+
     return (
         <>
-            <div className="relative w-screen h-screen bg-gradient-to-br from-indigo-900 via-gray-900 to-blue-900">
+            <div className="z-10 relative w-screen h-screen bg-gradient-to-br from-indigo-900 via-gray-900 to-blue-900">
                 <div id="phaser-container" className="w-full h-full">
                     <GameCanvas ref={canvasRef} isPaused={isPaused} resetTrigger={resetTrigger} />
                 </div>
-
                 {isPaused && (
                     <div className="absolute inset-0 bg-black/70 flex flex-col justify-center items-center backdrop-blur-sm z-20">
                         <h1 className="text-6xl font-bold text-white mb-8 animate-pulse">PAUSA</h1>

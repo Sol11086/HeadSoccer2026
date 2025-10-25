@@ -1,6 +1,5 @@
 import { Navigate } from 'react-router-dom';
 
-// Este componente recibe a otros componentes (children)
 const RutaProtegida = ({ children }: { children: React.ReactNode }) => {
   
   const token = localStorage.getItem('token');

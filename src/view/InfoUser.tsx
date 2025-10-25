@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import estadio from '/img/estadioBlur.png'
 import dialog from '/img/infoDialog.png'
 import mcLovin from '/img/mclovin.jpeg'
+import alertSucces from '/img/succesAlert.png'
+import errorSucces from '/img/errorAlert.png'
 import Navbar from "../components/navbar";
 import apiService from "../api/apiService";
 
@@ -22,6 +24,8 @@ function InfoUser() {
         }
     }, []);
 
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [showError, setShowError] = useState(false);
     const [usuario, setUsuario] = useState<Usuario | null>(null);
     const [nickname, setNickname] = useState("");
     const [correo, setCorreo] = useState("");
@@ -42,22 +46,31 @@ function InfoUser() {
             });
             const data = response.data;
             const payload = data.body || data;
-            // Actualizar el estado del usuario con los nuevos datos
+
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             localStorage.setItem('token', payload.token);
             localStorage.setItem('user', JSON.stringify(payload.usuario));
             setUsuario(payload.usuario);
 
-            alert("Cambios guardados con éxito");
-            window.location.reload();
+            setShowSuccess(true);
+
+            setTimeout(() => {
+                setShowSuccess(false);
+            }, 1000);
+
         } catch (error: any) {
             if (error.response) {
                 console.error(error.response.data.body || 'Error: Credenciales incorrectas');
+                setShowError(true);
+
+                setTimeout(() => {
+                    setShowError(false);
+                }, 1000);
             } else {
                 console.error("Error al guardar los cambios:", error);
             }
-            
+
         }
     }
 
@@ -72,7 +85,44 @@ function InfoUser() {
                 <div>
                     <Navbar isUser={false} />
                 </div>
+                {showSuccess && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -30, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                        className="fixed top-6 right-6 z-50 items-center text-center shadow-lg"
+                    >
+                        <span className="w-full right-5 top-7 text-center absolute text-white mb-2 text-lg drop-shadow">
+                            Usuario actualizado con éxito!
+                        </span>
 
+                        <img
+                            src={alertSucces}
+                            alt="Alerta de éxito"
+                            className="w-full h-full object-contain"
+                        />
+                    </motion.div>
+                )}
+                {showError && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -30, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                        className="fixed top-6 right-6 z-50 items-center text-center shadow-lg"
+                    >
+                        <span className="w-full right-15 top-7 text-center absolute text-white mb-2 text-lg drop-shadow">
+                           Error inesperado
+                        </span>
+
+                        <img
+                            src={errorSucces}
+                            alt="Alerta de error"
+                            className="w-full h-full object-contain"
+                        />
+                    </motion.div>
+                )}
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8, y: 30 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
