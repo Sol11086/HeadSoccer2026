@@ -6,10 +6,7 @@
     BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
     'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   text-align: center;
-  overflow: hidden;
 }
-
-
 
 body {
   background-color: rgb(16, 16, 89);
@@ -50,3 +47,4 @@ body {
 .read-the-docs {
   color: #888;
 }
+

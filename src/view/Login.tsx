@@ -37,10 +37,9 @@ function App() {
             if (!response.ok) {
                 setError(data.message || 'Error en el login');
             } else {
-                setUsuario(data.usuario); // Guarda el usuario en estado
+                setUsuario(data.usuario);
                 console.log('Usuario logueado:', data.usuario);
 
-                // Navegar sin recargar la página
                 navigate('/home');
             }
         } catch (err) {
@@ -68,7 +67,6 @@ function App() {
             }
 
             setMensaje("Usuario registrado con éxito");
-            // Opcional: limpiar formulario
             setNickname("");
             setCorreo("");
             setContrasena("");
