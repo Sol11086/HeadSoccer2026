@@ -79,7 +79,7 @@ function App() {
             <button
               type="button"
               className="stroke-2 stroke-[#1F1B1B] text-gray-700"
-              onClick={() => setIsOpenInfo(true)} >
+              onClick={() => (window.location.href = "/user")} >
               <UserIcon className="h-12 w-12 text-[#808CB7] " />
             </button>
             <button type="button" className="cursor-pointer" onClick={() => (window.location.href = "/")}>
@@ -238,16 +238,12 @@ function App() {
                 transition={{ duration: 1, ease: "easeInOut" }}
               >
                 <img src={drawer} alt="Drawer" className="w-2/3" />
-
-                {/* Botón para cerrar el Drawer */}
                 <button
                   onClick={() => setShowDrawerConfiguration(false)}
                   className="absolute top-25 left-75 text-4xl font-black text-white h-20 rounded"
                 >
                   ✖
                 </button>
-
-                {/* CONTENEDOR DE BOTONES O CONFIGURACIÓN */}
                 <div className="absolute flex flex-col items-center justify-center left-115 top-45 gap-10">
                   <AnimatePresence mode="wait">
                     {!showVolConfig ? (
@@ -302,15 +298,15 @@ function App() {
                           onClick={() => setShowVolConfig(true)}
                         />
                         <motion.button
-                          className="z-10 w-120 h-40 bg-cover bg-center transition active:scale-95 cursor-pointer"
-                          style={{ backgroundImage: `url('/img/btn_volumen.png')` }}
+                          className="z-10 w-120 h-45 bg-cover bg-center transition active:scale-95 cursor-pointer"
+                          style={{ backgroundImage: `url('/img/btn_info.png')` }}
                           onMouseOver={(e) =>
                           (e.currentTarget.style.backgroundImage =
-                            "url('/img/btn_volumen_hover.png')")
+                            "url('/img/btn_info_hover.png')")
                           }
                           onMouseOut={(e) =>
                           (e.currentTarget.style.backgroundImage =
-                            "url('/img/btn_volumen.png')")
+                            "url('/img/btn_info.png')")
                           }
                           initial={{ opacity: 1, scale: 1 }}
                           animate={{ opacity: 1, scale: [1, 1.08, 1] }}
@@ -446,19 +442,19 @@ function App() {
                         style={{
                           backgroundImage:
                             selectedIndex === index
-                              ? "url('/img/character_selected.png')"
-                              : "url('/img/character.png')",
+                              ? "url('/img/award1.png')"
+                              : "url('/img/award1.png')",
                         }}
                         onMouseEnter={(e) => {
                           if (selectedIndex !== index) {
                             e.currentTarget.style.backgroundImage =
-                              "url('/img/character_hover.png')";
+                              "url('/img/award1.png')";
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (selectedIndex !== index) {
                             e.currentTarget.style.backgroundImage =
-                              "url('/img/character.png')";
+                              "url('/img/award1.png')";
                           }
                         }}
                         initial={{ opacity: 1, scale: 1 }}
@@ -479,7 +475,7 @@ function App() {
                         text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 
                         transition-opacity duration-300 pointer-events-none whitespace-nowrap"
                       >
-                        Santiago Giménez
+                        Nombre logro
                       </span>
                     </div>
                   ))}
@@ -488,25 +484,6 @@ function App() {
             )}
           </AnimatePresence>
         </div>
-        {isOpenInfo && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center">
-            <div
-              className="absolute inset-0 bg-black bg-opacity-5"
-              onClick={() => setIsOpenInfo(false)}></div>
-            <div className="relative bg-white w-11/12 max-w-md p-6 rounded-lg shadow-lg z-10">
-              <h2 className="text-2xl font-bold mb-4">Mi Diálogo</h2>
-              <p className="mb-4">
-                Este es el contenido del diálogo. Puedes poner lo que quieras aquí.
-              </p>
-              <button
-                className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
-                onClick={() => setIsOpenInfo(false)}
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </>
 
