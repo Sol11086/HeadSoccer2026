@@ -91,7 +91,7 @@ function App() {
 
     return (
         <>
-            <div>
+            <div className='overflow-hidden'>
                 <img
                     src={estadio}
                     alt="Fondo"
