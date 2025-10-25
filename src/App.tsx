@@ -1,4 +1,5 @@
 import { Routes, Route, Link } from "react-router-dom";
+import SecurityPath from "./components/SecurityPath.tsx";
 import Login from "./view/Login.tsx";
 import Home from "./view/Home.tsx";
 import User from "./view/InfoUser.tsx";

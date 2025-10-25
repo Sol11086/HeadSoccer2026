@@ -10,7 +10,7 @@ import country from '/img/banderaMexico.png'
 import estadio from '/img/estadioBlur.png'
 import moneda from '/img/moneda-de-un-dolar.png'
 import { UserIcon, ArrowRightEndOnRectangleIcon } from '@heroicons/react/24/solid'
-import user from '/img/User.png'
+//import user from '/img/User.png'
 import { style } from 'framer-motion/client';
 // import terofeo from '/img/trofeo.png'
 import user from '/assets/icons/Santiago_Gimenez_Icon.png'
