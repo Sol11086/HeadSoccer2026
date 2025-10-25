@@ -1,12 +1,66 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import estadio from '/img/estadioBlur.png'
-import moneda from '/img/moneda-de-un-dolar.png'
-import user from '/img/User.png'
 import dialog from '/img/infoDialog.png'
 import mcLovin from '/img/mclovin.jpeg'
-import { ArrowRightEndOnRectangleIcon } from "@heroicons/react/24/outline";
+import Navbar from "../components/navbar";
+import apiService from "../api/apiService";
 
-function infoUser() {
+interface Usuario {
+    id_usuario: number;
+    nickname: string;
+    correo: string;
+    monedas: number;
+}
+
+function InfoUser() {
+    useEffect(() => {
+        const usuarioGuardado = localStorage.getItem('user');
+        if (usuarioGuardado) {
+            const data = JSON.parse(usuarioGuardado);
+            setUsuario(data.usuario ?? data);
+        }
+    }, []);
+
+    const [usuario, setUsuario] = useState<Usuario | null>(null);
+    const [nickname, setNickname] = useState("");
+    const [correo, setCorreo] = useState("");
+    const [contrasena, setContrasena] = useState("");
+    const [fechaNacimiento, setFechaNacimiento] = useState("");
+    const handleChanges = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        console.log("Enviando cambios:", { id_usuario: usuario?.id_usuario, nickname, correo, contrasena, fechaNacimiento, monedas: usuario?.monedas });
+
+        try {
+            const response = await apiService.put("/usuarios/actualizar", {
+                id_usuario: usuario?.id_usuario,
+                nickname,
+                correo,
+                contrasena,
+                fechaNacimiento,
+                monedas: usuario?.monedas
+            });
+            const data = response.data;
+            const payload = data.body || data;
+            // Actualizar el estado del usuario con los nuevos datos
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.setItem('token', payload.token);
+            localStorage.setItem('user', JSON.stringify(payload.usuario));
+            setUsuario(payload.usuario);
+
+            alert("Cambios guardados con éxito");
+            window.location.reload();
+        } catch (error: any) {
+            if (error.response) {
+                console.error(error.response.data.body || 'Error: Credenciales incorrectas');
+            } else {
+                console.error("Error al guardar los cambios:", error);
+            }
+            
+        }
+    }
+
     return (
         <>
             <div>
@@ -15,53 +69,10 @@ function infoUser() {
                     alt="Fondo"
                     className="absolute inset-0 w-full h-full object-cover"
                 />
-                <motion.div
-                    initial={{ y: -100, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="fixed z-50 top-0 left-0 w-full h-25 bg-[#3f4253] border-b-4 border-t-4 border-[#1F1B1B]
-                     justify-between flex items-center px-8 text-white text-2xl font-bold shadow-md"
-                    style={{
-                        boxShadow: "inset 0 4px 0 #808CB7",
-                    }}
-                >
-                    <div className="flex items-center gap-30">
-                        <img
-                            src={user}
-                            alt="icono"
-                            className="absolute w-16 left-5 h-16 object-cover"
-                        />
-                        <input
-                            type="text"
-                            style={{ fontFamily: "Arial, sans-serif" }}
-                            readOnly
-                            value="Nickname"
-                            className="pl-7 rounded-md ml-10 h-10 text-[#c4c2c2] bg-[#1F1B1B] outline-none"
-                        />
-                        <img
-                            src={moneda}
-                            alt="icono"
-                            className="absolute w-18 left-120 h- object-cover"
-                        />
-                        <input
-                            type="number"
-                            style={{ fontFamily: "Arial, sans-serif" }}
-                            readOnly
-                            value="50"
-                            className="pl-7 text-[#c4c2c2] rounded-md h-10 bg-[#1F1B1B] outline-none"
-                        />
-                    </div>
+                <div>
+                    <Navbar isUser={false} />
+                </div>
 
-                    <div className="flex items-center gap-10">
-                        <button
-                            type="button"
-                            className="cursor-pointer"
-                            onClick={() => (window.location.href = "/")}
-                        >
-                            <ArrowRightEndOnRectangleIcon className="h-12 w-12 text-[#1F1B1B]" />
-                        </button>
-                    </div>
-                </motion.div>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.8, y: 30 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -77,7 +88,7 @@ function infoUser() {
                         <div className="flex flex-col items-center gap-4">
                             <button
                                 type="button"
-                                className="absolute text-5xl top-2 left-1 text-amber-500 p-2 rounded-full z-10"
+                                className="absolute text-5xl top-0 left-1 text-amber-500 p-2 rounded-full z-10 cursor-pointer"
                                 onClick={() => (window.location.href = "/home")}
                             >
                                 ←
@@ -96,10 +107,12 @@ function infoUser() {
                                 Cambiar imagen
                             </button>
                         </div>
-                        <form className="flex flex-col gap-3 w-1/2">
-                            <label className="text-black text-left text-2xl">Nombre</label>
+                        <form onSubmit={handleChanges} className="flex flex-col gap-3 w-1/2">
+                            <label className="text-black text-left text-2xl">Nickname</label>
                             <input
                                 type="text"
+                                value={nickname}
+                                onChange={(e) => setNickname(e.target.value)}
                                 style={{ fontFamily: "Arial, sans-serif" }}
                                 className="p-2 h-14 border-4 w-full bg-[#EBECE9] border-[#24262e] outline-none"
                             />
@@ -107,6 +120,8 @@ function infoUser() {
                             <label className="text-black text-left text-2xl">Correo</label>
                             <input
                                 type="email"
+                                value={correo}
+                                onChange={(e) => setCorreo(e.target.value)}
                                 style={{ fontFamily: "Arial, sans-serif" }}
                                 className="p-2 h-14 border-4 w-full bg-[#EBECE9] border-[#24262e] outline-none"
                             />
@@ -114,6 +129,8 @@ function infoUser() {
                             <label className="text-black text-left text-2xl">Contraseña</label>
                             <input
                                 type="password"
+                                value={contrasena}
+                                onChange={(e) => setContrasena(e.target.value)}
                                 style={{ fontFamily: "Arial, sans-serif" }}
                                 className="p-2 h-14 border-4 w-full bg-[#EBECE9] border-[#24262e] outline-none"
                             />
@@ -123,16 +140,17 @@ function infoUser() {
                             </label>
                             <input
                                 type="date"
+                                value={fechaNacimiento}
+                                onChange={(e) => setFechaNacimiento(e.target.value)}
                                 style={{ fontFamily: "Arial, sans-serif" }}
                                 className="h-14 p-2 border-4 w-full bg-[#EBECE9] border-[#24262e] outline-none"
                             />
 
-                            <button
-                                type="button"
-                                className="mt-6 text-amber-500 text-2xl underline decoration-2"
-                            >
-                                Editar información
-                            </button>
+                            <input
+                                type="submit"
+                                className="mt-6 text-amber-500 text-2xl underline decoration-2 text-center cursor-pointer"
+                                value={"Guardar cambios"}
+                            />
                         </form>
                     </div>
                 </motion.div>
@@ -141,4 +159,4 @@ function infoUser() {
     );
 }
 
-export default infoUser;
+export default InfoUser;
