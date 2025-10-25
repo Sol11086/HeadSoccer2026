@@ -11,7 +11,12 @@ function App() {
             <div>
                 <Routes>
                     <Route path="/" element={<Login />} />
-                    <Route path="/home" element={<Home />} />
+                    <Route path="/home" element={
+                      <SecurityPath>
+                        <Home />
+                      </SecurityPath>
+                     } 
+                    />
                     <Route path="/game" element={<Game />} />
                     <Route path="/user" element={<User />} />
                     <Route path="*" element={<h1>404 - Página no encontrada</h1>} />

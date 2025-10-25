@@ -1,50 +1,59 @@
 import { useState } from 'react'
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import estadio from '/img/estadioBlur.png'
 import logo from '/img/KickHeadz_logo_2 1.png'
 import form from '/img/FormBox.png'
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 
 function App() {
     const [showForm, setShowForm] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [isFlipped, setIsFlipped] = useState(false);
-    const [usuario, setUsuario] = useState(null);
     const [nickname, setNickname] = useState("");
     const [correo, setCorreo] = useState("");
     const [contrasena, setContrasena] = useState("");
     const [fechaNacimiento, setFechaNacimiento] = useState("");
     const [error, setError] = useState("");
     const [mensaje, setMensaje] = useState("");
+    const URL_API = import.meta.env.VITE_API_URL;
 
     const navigate = useNavigate();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        if (!correo || !contrasena) {
+            setError('Por favor, completa todos los campos');
+            return;
+        }
 
         try {
-            const response = await fetch('http://localhost:4000/api/usuarios/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ correo, contrasena })
+            const response = await axios.post(`${URL_API}/api/usuarios/login`, {
+                correo,
+                contrasena,
             });
 
-            const data = await response.json();
+            const data = response.data;
 
-            if (!response.ok) {
-                setError(data.message || 'Error en el login');
+            const payload = data.body || data;
+
+            if (!payload.success) {
+                setError(payload.message || 'Error en el login');
             } else {
-                setUsuario(data.usuario);
-                console.log('Usuario logueado:', data.usuario);
-
+                localStorage.setItem('token', payload.token);
+                localStorage.setItem('user', JSON.stringify(payload.usuario));
                 navigate('/home');
             }
         } catch (err) {
             console.error('Error de conexión:', err);
-            setError('No se pudo conectar al servidor');
+            if (axios.isAxiosError(err) && err.response) {
+                setError(err.response.data.body || 'Error: Credenciales incorrectas');
+            } else {
+                setError('No se pudo conectar al servidor');
+            }
         }
     };
 
@@ -54,7 +63,7 @@ function App() {
         setMensaje("");
 
         try {
-            const response = await fetch("http://localhost:4000/api/usuarios/registrar", {
+            const response = await fetch(`${URL_API}/api/usuarios/registrar`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ nickname, correo, contrasena, fechaNacimiento }),
@@ -67,13 +76,15 @@ function App() {
             }
 
             setMensaje("Usuario registrado con éxito");
+            // limpiar formulario
             setNickname("");
             setCorreo("");
             setContrasena("");
             setFechaNacimiento("");
 
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            setError(message);
             console.error("Error en registro:", err);
         }
     };
@@ -168,13 +179,6 @@ function App() {
                                     </div>
                                     {error && <span className="text-red-500">{error}</span>}
                                 </form>
-                                {/* {usuario && (
-                                    <div className="mt-4">
-                                        <h2>Bienvenido, {usuario.nickname}</h2>
-                                        <p>Correo: {usuario.correo}</p>
-                                        <p>Monedas: {usuario.monedas}</p>
-                                    </div>
-                                )} */}
                             </div>
                         </div>
                         <div className="absolute inset-0 backface-hidden rotateY-180">

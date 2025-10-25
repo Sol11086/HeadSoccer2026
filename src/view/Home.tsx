@@ -1,23 +1,32 @@
-import { useState } from 'react'
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from "framer-motion";
 import form from '/img/FormBox.png'
 import boy from '/img/Mekoboy.png'
 import drawer from '/img/drawer_wallpaper.png'
+import player from '/assets/Mexico/Santiago_Gimenez.png'
 import country from '/img/banderaMexico.png'
 import estadio from '/img/estadioBlur.png'
 import moneda from '/img/moneda-de-un-dolar.png'
 import { UserIcon, ArrowRightEndOnRectangleIcon } from '@heroicons/react/24/solid'
 import user from '/img/User.png'
 import { style } from 'framer-motion/client';
+// import terofeo from '/img/trofeo.png'
+import user from '/assets/icons/Santiago_Gimenez_Icon.png'
 
+interface Usuario {
+  id_usuario: number;
+  nickname: string;
+  correo: string;
+  monedas: number;
+}
 
 function App() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [showDrawerConfiguration, setShowDrawerConfiguration] = useState(false);
   const [showVolConfig, setShowVolConfig] = useState(false);
   const [showDrawerAwards, setShowDrawerAwards] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(null);
-  const [isOpenInfo, setIsOpenInfo] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
   const [musicVolume, setMusicVolume] = useState(50);
@@ -29,7 +38,28 @@ function App() {
   };
 
   const handleSave = () => {
-    console.log({ musicVolume, systemVolume });
+    console.log({ musicVolume, systemVolume });}
+  
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isOpenInfo, setIsOpenInfo] = useState(false);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const usuarioGuardado = localStorage.getItem('user');
+    if (usuarioGuardado) {
+      const data = JSON.parse(usuarioGuardado);
+      setUsuario(data.usuario ?? data);
+      console.log(data);
+    } else {
+      handleLogout();
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/');
   };
 
   return (
@@ -59,7 +89,7 @@ function App() {
               type="text"
               style={{ fontFamily: "Arial, sans-serif" }}
               readOnly
-              value="Nickname"
+              value={usuario?.nickname || 'Invitado'}
               className="pl-7 rounded-md ml-10 h-10 text-[#c4c2c2] bg-[#1F1B1B] outline-none"
             />
             <img
@@ -68,10 +98,10 @@ function App() {
               className="absolute w-18 left-120 h- object-cover"
             />
             <input
-              type="nomber"
+              type="number"
               style={{ fontFamily: "Arial, sans-serif" }}
               readOnly
-              value="50"
+              value={usuario?.monedas || 0}
               className="pl-7 text-[#c4c2c2] rounded-md h-10 bg-[#1F1B1B] outline-none"
             />
           </div>
@@ -82,7 +112,7 @@ function App() {
               onClick={() => (window.location.href = "/user")} >
               <UserIcon className="h-12 w-12 text-[#808CB7] " />
             </button>
-            <button type="button" className="cursor-pointer" onClick={() => (window.location.href = "/")}>
+            <button type="button" className="cursor-pointer" onClick={() => handleLogout()}>
               <ArrowRightEndOnRectangleIcon className="h-12 w-12 text-[#1F1B1B] " />
             </button>
           </div>
@@ -94,8 +124,8 @@ function App() {
             animate={{ x: -150, y: 70, opacity: 1 }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
-            <img src={country} alt="character" className='fixed z-10 w-1/5 top-30 right-135 ' />
-            <img src={boy} alt="character" className='fixed w-5/6' />
+            <img src={country} alt="character" className='fixed z-10 w-50 top-43 left-20 ' />
+            <img src={player} alt="character" className='fixed h-100 w-100' />
             <input
               type="text"
               readOnly
