@@ -6,10 +6,7 @@
     BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
     'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   text-align: center;
-  overflow: hidden;
 }
-
-
 
 body {
   background-color: rgb(16, 16, 89);
@@ -21,9 +18,11 @@ body {
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -32,6 +31,7 @@ body {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -48,5 +48,33 @@ body {
 }
 
 .read-the-docs {
-  color: #888;
+  color: #808CB7;
+}
+
+.clip-octagon {
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(10% 0%, 90% 0%,
+      100% 10%, 100% 90%,
+      90% 100%, 10% 100%,
+      0% 90%, 0% 10%);
+}
+
+
+.clip-octagon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 3px;
+  background: linear-gradient(135deg, #808CB7, #808CB7);
+  clip-path: polygon(10% 0%, 90% 0%,
+      100% 10%, 100% 90%,
+      90% 100%, 10% 100%,
+      0% 90%, 0% 10%);
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
