@@ -4,6 +4,7 @@ import Login from "./view/Login.tsx";
 import Home from "./view/Home.tsx";
 import User from "./view/InfoUser.tsx";
 import Game from "./components/GameCanvas.tsx";
+import MatchSetup from "./view/MatchSetup.tsx";
 import './App.css';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
                       </SecurityPath>
                      } 
                     />
+                    <Route path="/setup" element={<MatchSetup />} />
                     <Route path="/game" element={<Game isPaused={false} resetTrigger={0} />} />
                     <Route path="/user" element={<User />} />
                     <Route path="*" element={<h1>404 - Página no encontrada</h1>} />

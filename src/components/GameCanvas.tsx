@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, forwardRef } from 'react';
 import Phaser from 'phaser';
 import Pause from './pause';
 import GameOverModal from './GameOverModal';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface GameCanvasProps {
     isPaused: boolean;
@@ -105,6 +105,11 @@ class GameScene extends Phaser.Scene {
         this.physics.world.setBounds(0, 0, this.scale.width, this.scale.height - 50);
         this.add.rectangle(this.scale.width / 2, this.scale.height - 25, this.scale.width, 50, 0x228B22);
 
+        const p1SkinName = this.registry.get('p1Skin');
+        const p2SkinName = this.registry.get('p2Skin');
+
+        console.log(`Iniciando partido: ${p1SkinName} VS ${p2SkinName}`);
+
         // A) Jugador 1 - Cuerpo Físico (Invisible)
         this.player1 = this.physics.add.sprite((this.scale.width * 0.25), this.scale.height / 1.2, 'ball') as Player & { facing: 'left' | 'right' };
         this.player1.setVisible(false); // Lo ocultamos, solo nos importa su física
@@ -122,6 +127,7 @@ class GameScene extends Phaser.Scene {
         this.player1Armature.setScale(0.4); // Ajusta la escala si sale gigante
         this.player1Armature.setSkinByName('default');
         this.player1Armature.setSlotsToSetupPose();
+        this.applySkinToSkeleton(this.player1Armature.skeleton, p1SkinName); 
 
 
         // Jugador 2 - Cuerpo Físico (Invisible)
@@ -142,6 +148,7 @@ class GameScene extends Phaser.Scene {
         this.player2Armature.scaleY = 0.4;   // Flip en SPINE con escala negativa
         this.player2Armature.setSkinByName('default');
         this.player2Armature.setSlotsToSetupPose();
+        this.applySkinToSkeleton(this.player2Armature.skeleton, p2SkinName);
 
         // 1. Activar depuración visual
         // (Esto dibuja huesos, nombres de slots y bordes)
@@ -368,10 +375,10 @@ class GameScene extends Phaser.Scene {
         if (isComingFromAbove && isHorizontallyOver) {
             // Rebote hacia arriba
             ballBody.velocity.y = -800;
-            // Opcional: añadir pequeño empujón horizontal según lado del travesaño
-            const horizontalPush = ((ball as any).x < crossbarX) ? -100 : 100;
+            const horizontalPush = ((ball as any).x < crossbarX) ? -300 : 300;
             ballBody.velocity.x += horizontalPush;
         }
+        
     }
 
     private handlePlayerBallCollide(
@@ -438,7 +445,7 @@ class GameScene extends Phaser.Scene {
                 const ghost = this.add.spine(player.x, player.y + 10, 'player_anim', spineSource.state.getCurrent(0).animation.name, false);
                 ghost.setScale(spineSource.scaleX, spineSource.scaleY); // Copia dirección y tamaño
 
-                this.applySkinToSkeleton(ghost.skeleton, this.currentSkinName === "Santi");
+                //this.applySkinToSkeleton(ghost.skeleton, this.currentSkinName );
 
                 ghost.setAlpha(0.5);
                 ghost.setDepth(-1);
@@ -474,38 +481,47 @@ class GameScene extends Phaser.Scene {
         this.time.delayedCall(100, () => { kickZone.destroy(); });
     }
 
-    private applySkinToSkeleton(skeleton: any, isSanti: boolean) {
-        const prefix = isSanti ? "S_" : "G_";
+    private applySkinToSkeleton(skeleton: any, skinKey: string) {
+        
+        // DICCIONARIO MAESTRO: Define qué prefijo usa cada personaje en el Atlas.
+        const prefixMap: { [key: string]: string } = {
+            "Santi": "S_",
+            "Gio":   "G_",
+            "Alponso": "A_", // Futuro
+            "Endrick": "E_", // Futuro
+            "Musa":    "M_", // Futuro
+            "Cho":     "C_"  // Futuro
+        };
+
+        // Obtener prefijo (Fallback a G_ si no existe para evitar crash)
+        const prefix = prefixMap[skinKey] || "G_";
+        console.log(`🔍 Aplicando Skin: ${skinKey} | Prefijo: ${prefix}`);
         const mappings = [
-            { slot: "G_Cabeza", suffix: "Cabeza" },
-            { slot: "G_Cuerpo", suffix: "Cuerpo" },
-            { slot: "G_Mano_Derecha", suffix: "Mano_Derecha" },
+            { slot: "G_Cabeza",         suffix: "Cabeza" },
+            { slot: "G_Cuerpo",         suffix: "Cuerpo" },
+            { slot: "G_Mano_Derecha",   suffix: "Mano_Derecha" },
             { slot: "G_Mano_Izquierda", suffix: "Mano_Izquierda" },
-            { slot: "G_Tenis_Derecho", suffix: "Tenis_Derecho" },
+            { slot: "G_Tenis_Derecho",  suffix: "Tenis_Derecho" },
             { slot: "G_Tenis_Izquierdo", suffix: "Tenis_Izquierdo" }
         ];
 
         mappings.forEach(map => {
             const attachmentName = prefix + map.suffix;
             try {
-                const slot = skeleton.findSlot(map.slot);
+                const slotIndex = skeleton.findSlotIndex(map.slot);
+                const slot = skeleton.slots[slotIndex];
                 if (slot) {
                     const attachment = skeleton.getAttachment(skeleton.findSlotIndex(map.slot), attachmentName);
-                    if (attachment) slot.setAttachment(attachment);
+                    if (attachment) {
+                        // Parche visual 
+                        if (skinKey === "Gio" && map.suffix === "Mano_Izquierda") {
+                             // attachment.scaleX = 1; 
+                        }
+                        slot.setAttachment(attachment);
+                    }
                 }
-            } catch (e) { console.error(`Error aplicando skin en slot ${map.slot}:`, e); }
+            } catch (e) { console.error(`Error al asignar ${attachmentName} en slot ${map.slot}:`, e); }
         });
-    }
-
-    // --- FUNCIÓN PARA CAMBIAR SKIN ---
-    public toggleSkin() {
-        const isSanti = this.currentSkinName === "default";
-        this.currentSkinName = isSanti ? "Santi" : "default";
-        const prefix = isSanti ? "S_" : "G_";
-
-        console.log(`🔄 Intentando cambiar a ${this.currentSkinName} (Prefijo: ${prefix})`);
-        this.applySkinToSkeleton(this.player1Armature.skeleton, isSanti);
-
     }
 
 
@@ -606,6 +622,13 @@ const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({ isPaused, r
     const [sceneInstance, setSceneInstance] = useState<GameScene | null>(null);
     const navigate = useNavigate();
     const [gameOverData, setGameOverData] = useState<{winner: string, score: string} | null>(null);
+
+    const location = useLocation();
+    
+    // Recuperar la selección (o usar default si entran directo)
+    const p1Skin = location.state?.p1Skin || "default"; 
+    const p2Skin = location.state?.p2Skin || "default";
+
     <Pause />
 
     // useEffect para crear y destruir el juego
@@ -646,6 +669,8 @@ const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({ isPaused, r
 
         const game = new Phaser.Game(config);
         gameRef.current = game;
+        game.registry.set('p1Skin', p1Skin);
+        game.registry.set('p2Skin', p2Skin);
 
         // Capturamos la escena cuando esté lista para poder llamar métodos desde React
         game.events.on('ready', () => {

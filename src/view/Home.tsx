@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import Navbar from '../components/navbar.tsx'
 import form from '/img/FormBox.png'
 import drawer from '/img/drawer_wallpaper.png'
-import player from '/assets/Mexico/Santiago_Gimenez.png'
-import country from '/img/banderaMexico.png'
 import estadio from '/img/estadioBlur.png'
 
+import CharacterPreview from '../components/CharacterPreview.tsx';
+import { Characters } from '../data/Characters';
 
 function App() {
   const [showDrawer, setShowDrawer] = useState(false);
@@ -27,8 +27,11 @@ function App() {
     console.log({ musicVolume, systemVolume });
   }
 
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  // Estado para el personaje seleccionado
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [isOpenInfo, setIsOpenInfo] = useState(false);
+
+  const currentChar = Characters[selectedIndex];
 
 
   return (
@@ -45,32 +48,39 @@ function App() {
         </div>
 
         <div className="w-screen h-screen flex overflow-hidden">
+          {/* Sección: Personaje */}
           <motion.div
-            className="w-3/6 flex flex-col justify-center items-center pl-8"
+            className="w-3/6 flex flex-col justify-center items-center pl-8 relative"
             initial={{ x: -300, y: 70, opacity: 0 }}
             animate={{ x: -150, y: 70, opacity: 1 }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
-            <img src={country} alt="character" className='fixed z-10 top-25 left-30 w-50' />
-            <img src={player} alt="character" className='fixed h-100 w-100' />
+            <img src={currentChar.flagImg} alt="country" className='fixed z-21 top-42 left-60 w-30 h-30 object-cover rounded-[50%] border-6 border-black' />
+
+            <div className='fixed h-100 w-100 top-25 flex justify-center items-center z-20'>
+              <CharacterPreview skin={currentChar.skinKey} />
+            </div>
+
             <input
               type="text"
               readOnly
-              value="Santiago Gimenez"
-              className=" fixed text-center h-14 p-2 w-1/2 top-35 items-start text-white text-2xl rounded-xl bg-[#1F1B1B] outline-none"
+              value={currentChar.name}
+              className="fixed text-center h-14 p-2 w-100 top-50 items-start text-white text-2xl rounded-xl bg-[#1F1B1B] outline-none z-20"
             />
+
             <motion.button
-              className="fixed bottom-25 z-10 w-30 h-30 bg-cover bg-center transition active:scale-95 cursor-pointer"
-              style={{ backgroundImage: `url('/img/rowLeft.png')`, }}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundImage = "url('/img/rowLeft.png')")}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/rowLeft.png')")}
+              className="fixed bottom-35 z-20 w-50 h-50 bg-cover bg-center transition active:scale-95 cursor-pointer"
+              style={{ backgroundImage: `url('/img/change_char.png')`, }}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundImage = "url('/img/change_char.png')")}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/change_char.png')")}
               initial={{ opacity: 1, scale: 1 }}
               animate={{ opacity: 1, scale: [1, 1.08, 1] }}
               transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
               onClick={() => setShowDrawer(true)}
             />
-            <img src={form} alt="Form" className="w-120" />
+            <img src={form} alt="Form" className="w-120 z-0" />
           </motion.div>
+
           <AnimatePresence>
             {showDrawer && (
               <motion.div
@@ -81,30 +91,32 @@ function App() {
                 exit={{ x: -1500, opacity: 1 }}
                 transition={{ duration: 1, ease: "easeInOut" }}
               >
-                <img src={drawer} alt="Drawer" className='w-1/2' />
-                <div className="fixed top-50 right-111 grid grid-cols-3 gap-6">
-                  {[...Array(6)].map((_, index) => (
-                    <div key={index} className="relative group">
-                      <button onClick={() => setShowDrawer(false)}
-                        className="fixed top-25 right-110 text-4xl font-black text-white h-20 rounded" > ✖ </button>
+                <img src={drawer} alt="Drawer" className='w-220 h-240  relative top-18 right-10 border-6 border-black' />
+                <div className="fixed top-50 left-160 grid grid-cols-3 gap-6">
+                  <button onClick={() => setShowDrawer(false)}
+                    className="fixed top-25 right-160 text-4xl font-black text-white h-20 rounded cursor-pointer" > ✖ </button>
+
+                  {/* Renderizado Dinámico de la lista de personajes */}
+                  {Characters.map((char, index) => (
+                    <div key={char.id} className="relative group">
+
+
                       <motion.button
                         className={`w-42 h-54 bg-cover bg-center rounded-xl transition-all duration-200`}
                         style={{
-                          backgroundImage:
-                            selectedIndex === index
-                              ? "url('/img/character_selected.png')"
-                              : "url('/img/character.png')",
+                          // Aquí podrías usar char.faceImg si tuvieras las caras recortadas
+                          backgroundImage: selectedIndex === index
+                            ? "url('/img/character_selected.png')"
+                            : "url('/img/character.png')",
                         }}
                         onMouseEnter={(e) => {
                           if (selectedIndex !== index) {
-                            e.currentTarget.style.backgroundImage =
-                              "url('/img/character_hover.png')";
+                            e.currentTarget.style.backgroundImage = "url('/img/character_hover.png')";
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (selectedIndex !== index) {
-                            e.currentTarget.style.backgroundImage =
-                              "url('/img/character.png')";
+                            e.currentTarget.style.backgroundImage = "url('/img/character.png')";
                           }
                         }}
                         initial={{ opacity: 1, scale: 1 }}
@@ -119,16 +131,17 @@ function App() {
                         onClick={() => setSelectedIndex(index)}
                       />
 
-                      {/* Tooltip */}
+                      {/* Tooltip Dinámico */}
                       <span
-                        className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white 
-                        text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 
+                        className="absolute -top-4 left-1/2 -translate-x-1/2 bg-black text-white 
+                        text-m px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 
                         transition-opacity duration-300 pointer-events-none whitespace-nowrap"
                       >
-                        Santiago Giménez
+                        {char.name}
                       </span>
                     </div>
                   ))}
+
                   <motion.button
                     className="z-10 absolute w-55 h-20 top-120 bg-cover transition active:scale-95 cursor-pointer"
                     style={{ backgroundImage: `url('/img/btn_cambiar.png')`, }}
@@ -161,7 +174,7 @@ function App() {
                 onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_2jugadores.png')")}
                 initial={{ opacity: 1, scale: 1 }}
                 animate={{ opacity: 1, scale: [1, 1.08, 1] }}
-                onClick={() => (window.location.href = "/game")}
+                onClick={() => (window.location.href = "/setup")}
                 transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
               />
             </div>
@@ -198,14 +211,15 @@ function App() {
                 exit={{ x: 1500, opacity: 0 }}
                 transition={{ duration: 1, ease: "easeInOut" }}
               >
-                <img src={drawer} alt="Drawer" className="w-2/3" />
+                <img src={drawer} alt="Drawer" className="'w-220 h-240 relative top-18 left-18 border-6 border-black" />
                 <button
                   onClick={() => setShowDrawerConfiguration(false)}
-                  className="absolute top-25 left-75 text-4xl font-black text-white h-20 rounded"
+                  className="absolute top-25 left-180 text-4xl font-black text-white h-20 rounded cursor-pointer"
                 >
                   ✖
                 </button>
-                <div className="absolute flex flex-col items-center justify-center left-115 top-45 gap-10">
+                
+                <div className="fixed flex flex-col items-center justify-center left-210 top-45 gap-10">
                   <AnimatePresence mode="wait">
                     {!showVolConfig ? (
                       // ======= BOTONES =======
@@ -391,11 +405,11 @@ function App() {
                 animate={{ x: 500, opacity: 1 }}
                 exit={{ x: 1500, opacity: 1 }}
                 transition={{ duration: 1, ease: "easeInOut" }}>
-                <img src={drawer} alt="Drawer" className='w-2/3' />
+                <img src={drawer} alt="Drawer" className='w-220 h-240 relative top-18 left-18 border-6 border-black' />
                 <button
                   onClick={() => setShowDrawerAwards(false)}
-                  className="absolute top-25 left-75 text-4xl font-black text-white h-20 rounded"> ✖ </button>
-                <div className="fixed top-50 left-100 grid grid-cols-3 gap-6">
+                  className="absolute top-25 left-170 text-4xl font-black text-white h-20 rounded cursor-pointer"> ✖ </button>
+                <div className="fixed top-60 left-185 grid grid-cols-3 gap-6">
                   {[...Array(6)].map((_, index) => (
                     <div key={index} className="relative group">
                       <motion.button
