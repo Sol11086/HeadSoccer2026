@@ -8,6 +8,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import apiService from '../api/apiService';
 import { Characters } from '../data/Characters'
 
+import { motion, AnimatePresence } from "framer-motion";
+
+
+
 interface GameCanvasProps {
     isPaused: boolean;
     resetTrigger: number;
@@ -128,7 +132,7 @@ class GameScene extends Phaser.Scene {
         this.player1Armature.setScale(0.4); // Ajusta la escala si sale gigante
         this.player1Armature.setSkinByName('default');
         this.player1Armature.setSlotsToSetupPose();
-        this.applySkinToSkeleton(this.player1Armature.skeleton, p1SkinName); 
+        this.applySkinToSkeleton(this.player1Armature.skeleton, p1SkinName);
 
 
         // Jugador 2 - Cuerpo Físico (Invisible)
@@ -241,8 +245,6 @@ class GameScene extends Phaser.Scene {
 
     }
 
-
-
     // --- FUNCIONES PARA EL PARTIDO ---
 
     private setupTimer() {
@@ -260,7 +262,7 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         if (this.gameTimer) this.gameTimer.remove();
-        
+
         // Evento que se dispara cada 1 segundo
         this.gameTimer = this.time.addEvent({
             delay: 1000,
@@ -274,7 +276,7 @@ class GameScene extends Phaser.Scene {
         if (this.isMatchOver) return;
 
         this.timeLeft--;
-        
+
         // Formatear texto mm:ss
         const minutes = Math.floor(this.timeLeft / 60);
         const seconds = this.timeLeft % 60;
@@ -353,7 +355,10 @@ class GameScene extends Phaser.Scene {
         this.scoreText.setText('0 - 0');
         this.isMatchOver = false;
         this.physics.resume();
-        
+
+        this.player1Armature.timeScale = 1;
+        this.player2Armature.timeScale = 1;
+
         // Reiniciar Timer
         this.gameTimer.remove();
         this.setupTimer();
@@ -379,7 +384,7 @@ class GameScene extends Phaser.Scene {
             const horizontalPush = ((ball as any).x < crossbarX) ? -300 : 300;
             ballBody.velocity.x += horizontalPush;
         }
-        
+
     }
 
     private handlePlayerBallCollide(
@@ -437,8 +442,8 @@ class GameScene extends Phaser.Scene {
         const dashVelocity = player.facing === 'right' ? dashSpeed : -dashSpeed;
         player.setVelocity(dashVelocity, 0);
 
-        const skinKey = (player === this.player1) 
-            ? (this.registry.get('p1Skin') || "Santi") 
+        const skinKey = (player === this.player1)
+            ? (this.registry.get('p1Skin') || "Santi")
             : (this.registry.get('p2Skin') || "Gio");
 
         // Efecto de estela mejorado
@@ -450,7 +455,7 @@ class GameScene extends Phaser.Scene {
                 const ghost = this.add.spine(player.x, player.y + 10, 'player_anim', spineSource.state.getCurrent(0).animation.name, false);
                 ghost.setScale(spineSource.scaleX, spineSource.scaleY); // Copia dirección y tamaño
 
-                this.applySkinToSkeleton(ghost.skeleton, skinKey );
+                this.applySkinToSkeleton(ghost.skeleton, skinKey);
 
                 ghost.setAlpha(0.5);
                 ghost.setDepth(-1);
@@ -487,26 +492,26 @@ class GameScene extends Phaser.Scene {
     }
 
     private applySkinToSkeleton(skeleton: any, skinKey: string) {
-        
+
         // DICCIONARIO MAESTRO: Define qué prefijo usa cada personaje en el Atlas.
         const prefixMap: { [key: string]: string } = {
             "Santi": "S_",
-            "Gio":   "G_",
+            "Gio": "G_",
             "Alponso": "A_", // Futuro
             "Endrick": "E_", // Futuro
-            "Musa":    "M_", // Futuro
-            "Cho":     "C_"  // Futuro
+            "Musa": "M_", // Futuro
+            "Cho": "C_"  // Futuro
         };
 
         // Obtener prefijo (Fallback a G_ si no existe para evitar crash)
         const prefix = prefixMap[skinKey] || "G_";
         console.log(`🔍 Aplicando Skin: ${skinKey} | Prefijo: ${prefix}`);
         const mappings = [
-            { slot: "G_Cabeza",         suffix: "Cabeza" },
-            { slot: "G_Cuerpo",         suffix: "Cuerpo" },
-            { slot: "G_Mano_Derecha",   suffix: "Mano_Derecha" },
+            { slot: "G_Cabeza", suffix: "Cabeza" },
+            { slot: "G_Cuerpo", suffix: "Cuerpo" },
+            { slot: "G_Mano_Derecha", suffix: "Mano_Derecha" },
             { slot: "G_Mano_Izquierda", suffix: "Mano_Izquierda" },
-            { slot: "G_Tenis_Derecho",  suffix: "Tenis_Derecho" },
+            { slot: "G_Tenis_Derecho", suffix: "Tenis_Derecho" },
             { slot: "G_Tenis_Izquierdo", suffix: "Tenis_Izquierdo" }
         ];
 
@@ -607,7 +612,7 @@ class GameScene extends Phaser.Scene {
                 } else {
                     spine.play('Idle', true, true);
                 }
-            } 
+            }
         }
 
         // Dash
@@ -622,13 +627,15 @@ const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({ isPaused, r
     const gameRef = useRef<Phaser.Game | null>(null);
     const [sceneInstance, setSceneInstance] = useState<GameScene | null>(null);
     const navigate = useNavigate();
-    const [gameOverData, setGameOverData] = useState<{winner: string, score: string} | null>(null);
+    const [gameOverData, setGameOverData] = useState<{ winner: string, score: string } | null>(null);
     const [coinsEarned, setCoinsEarned] = useState<number>(0);
+    const [showAchievementToast, setShowAchievementToast] = useState(false);
+    const [achievementName, setAchievementName] = useState("");
 
     const location = useLocation();
-    
+
     // Recuperar la selección (o usar default si entran directo)
-    const p1Skin = location.state?.p1Skin || "default"; 
+    const p1Skin = location.state?.p1Skin || "default";
     const p2Skin = location.state?.p2Skin || "default";
 
     <Pause />
@@ -679,8 +686,8 @@ const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({ isPaused, r
             setSceneInstance(scene);
 
             scene.onGameOver = async (winner, scoreLeft, scoreRight) => {
-                
-                const p1Skin = location.state?.p1Skin || "Santi"; 
+
+                const p1Skin = location.state?.p1Skin || "Santi";
                 const p2Skin = location.state?.p2Skin || "Gio"; // Rival
 
                 const characterObj = Characters.find(c => c.skinKey === p1Skin);
@@ -697,50 +704,98 @@ const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({ isPaused, r
                 try {
                     const partidoData = {
                         id_personaje: idPersonaje,
-                        nivel: 1, 
+                        nivel: 1,
                         jugador_2: p2Skin,
                         resultado: resultadoDB,
-                        monedas: 20 ,
-                        goles_favor: scoreLeft, 
-                        goles_contra:scoreRight
+                        monedas: 20,
+                        goles_favor: scoreLeft,
+                        goles_contra: scoreRight
                     };
 
-                    // Llamada 1: Registrar Partido
+                    // Registrar Partido
                     await apiService.post('/partidos', partidoData);
-                    console.log("✅ Partido registrado en historial");
 
-                    // Llamada 2: Dar Recompensa 
-                        // Recuperar ID de usuario del localStorage para la petición
-                        const userStr = localStorage.getItem('user');
-                        if (userStr) {
-                            const userJson = JSON.parse(userStr);
-                            // Ajusta según tu estructura de objeto usuario
-                            const userId = userJson.usuario?.id_usuario || userJson.id_usuario; 
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                        const userJson = JSON.parse(userStr);
+                        const userId = userJson.usuario?.id_usuario || userJson.id_usuario;
 
-                            const rewardResp = await apiService.post('/usuarios/recompensa', {
-                                id_usuario: userId,
-                                cantidad: 20
-                            });
+                        const rewardResp = await apiService.post('/usuarios/recompensa', {
+                            id_usuario: userId,
+                            cantidad: 20
+                        });
 
-                            if (!rewardResp.data.success) {
-                                console.log("💰 Monedas sumadas!");
-                                setCoinsEarned(20);
-                                
-                                // Actualizar Storage para que el Navbar lo refleje
-                                let updatedUser = { ...userJson };
-                                if(updatedUser.usuario) updatedUser.usuario = rewardResp.data.body.usuario;
-                                else updatedUser = rewardResp.data.body.usuario;
-                                
-                                localStorage.setItem('user', JSON.stringify(updatedUser));
-                                window.dispatchEvent(new Event("storage")); 
-                            }
+                        if (!rewardResp.data.success) {
+                            setCoinsEarned(20);
+
+                            // Actualizar Storage para que el Navbar lo refleje
+                            let updatedUser = { ...userJson };
+                            if (updatedUser.usuario) updatedUser.usuario = rewardResp.data.body.usuario;
+                            else updatedUser = rewardResp.data.body.usuario;
+
+                            localStorage.setItem('user', JSON.stringify(updatedUser));
+                            window.dispatchEvent(new Event("storage"));
                         }
+                    }
+                    // --- LÓGICA DE LOGROS ---
+                    const checkLogros = async () => {
+                        const logrosCumplidos = [];
+
+                        let gano = false;
+                        if (winner.includes("JUGADOR 1")) { resultadoDB = 'Ganado'; gano = true; }
+
+                        // Logro 1: Primera Victoria 
+                        if (gano) logrosCumplidos.push(1);
+                        // Logro 2: Goleador (5+ goles)
+                        if (scoreLeft >= 5) logrosCumplidos.push(2);
+                        // Logro 3: Invicto (Ganar y recibir 0 goles)
+                        if (gano && scoreRight === 0) logrosCumplidos.push(3);
+                        if (scoreLeft >= 10) logrosCumplidos.push(5); // Maestro del balón
+
+                        // Logro 4: "Entusiasta" (20 partidas)
+                        try {
+                            const historialResp = await apiService.get('/partidos');
+                            if (!historialResp.data.error) {
+                                const totalPartidos = historialResp.data.body.length;
+                                if (totalPartidos >= 20) {
+                                    logrosCumplidos.push(4);
+                                }
+                            }
+                        } catch (e) { console.error("Error contando partidos", e); }
+
+                        // Procesar desbloqueos
+                        for (const idLogro of logrosCumplidos) {
+                            try {
+                                const res = await apiService.post('/logros/desbloquear', { id_logro: idLogro });
+
+                                if (res.data.body.nuevo) {
+
+                                    setAchievementName(res.data.body.logro.nombre);
+                                    setShowAchievementToast(true);
+
+                                    setTimeout(() => setShowAchievementToast(false), 4000);
+
+                                    // Actualizar usuario (monedas)
+                                    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                                    if (currentUser) {
+                                        const usuarioActualizado = res.data.body.usuario || currentUser.usuario;
+
+                                        localStorage.setItem('user', JSON.stringify({ ...currentUser, usuario: usuarioActualizado }));
+                                        window.dispatchEvent(new Event("storage")); // Actualizar Navbar
+                                    }
+                                }
+                            } catch (e) { console.error("Error verificando logro", e); }
+                        }
+                    };
+
+                    // Llamar a la función (sin await para no bloquear el modal)
+                    checkLogros();
 
                 } catch (error) {
                     console.error("Error guardando partido:", error);
                     setCoinsEarned(0);
                 }
-                setGameOverData({ winner,   score: `${scoreLeft} - ${scoreRight}` });
+                setGameOverData({ winner, score: `${scoreLeft} - ${scoreRight}` });
             };
         });
 
@@ -779,19 +834,37 @@ const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({ isPaused, r
             }
         }
     }, [resetTrigger]); // Se ejecuta cada vez que el trigger cambia
-    
+
     return (
         <>
             {/* MODAL DE GAME OVER */}
             {gameOverData && (
-                <GameOverModal 
-                    winner={gameOverData?.winner ?? ''} 
-                    score={gameOverData?.score ?? ''} 
+                <GameOverModal
+                    winner={gameOverData?.winner ?? ''}
+                    score={gameOverData?.score ?? ''}
                     coins={coinsEarned}
-                    onRestart={handlePlayAgain} 
-                    onExit={handleExit} 
+                    onRestart={handlePlayAgain}
+                    onExit={handleExit}
                 />
             )}
+            <AnimatePresence>
+                {showAchievementToast && (
+                    <motion.div
+                        initial={{ y: -100, opacity: 0, scale: 0.5 }}
+                        animate={{ y: 100, opacity: 1, scale: 1 }} // Bajamos un poco más para que se note
+                        exit={{ y: -100, opacity: 0, scale: 0.5 }}
+                        className="fixed top-0 left-1/2 -translate-x-1/2 z-[60] flex flex-col items-center gap-2 bg-gradient-to-r from-orange-500 to-red-600 px-8 py-4 rounded-2xl border-4 border-yellow-400 shadow-[0_0_20px_rgba(255,165,0,0.6)]"
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="text-4xl">🏆</span>
+                            <div className="flex flex-col">
+                                <span className="text-sm text-yellow-200 uppercase tracking-widest">¡Logro Desbloqueado!</span>
+                                <span className="text-2xl text-white drop-shadow-md">{achievementName}</span>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
         </>
     );

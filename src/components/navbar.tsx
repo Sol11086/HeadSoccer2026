@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
 import moneda from '/img/coin.png'
-import user from '/assets/icons/Santiago_Gimenez_Icon.png'
+import userImg from '/assets/icons/Santiago_Gimenez_Icon.png'
 
 interface Usuario {
     id_usuario: number;
@@ -22,16 +22,29 @@ function Navbar({ isUser = true }: NavbarProps) {
     const [usuario, setUsuario] = useState<Usuario | null>(null);
     const navigate = useNavigate();
 
-    useEffect(() => {
+    const actualizarDatos = () => {
         const usuarioGuardado = localStorage.getItem('user');
         if (usuarioGuardado) {
-            const data = JSON.parse(usuarioGuardado);
-            setUsuario(data.usuario ?? data);
-            console.log(data);
-        } else {
-            handleLogout();
+            try {
+                const data = JSON.parse(usuarioGuardado);
+                // Soporta ambas estructuras: { usuario: {...} } o { ... }
+                setUsuario(data.usuario ?? data);
+            } catch (e) {
+                console.error("Error leyendo usuario", e);
+            }
         }
-    }, [isUser]);
+    };
+
+
+    useEffect(() => {
+        actualizarDatos();
+
+        window.addEventListener('storage', actualizarDatos);
+
+        return () => {
+            window.removeEventListener('storage', actualizarDatos);
+        };
+    }, []);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -51,32 +64,32 @@ function Navbar({ isUser = true }: NavbarProps) {
                 boxShadow: "inset 0 4px 0 #808CB7"
             }}>
 
-                <div className='flex items-center gap-30'>
-                    <img
-                        src={user}
-                        alt="icono"
-                        className="absolute w-16 left-5 h-16 object-cover"
-                    />
-                    <input
-                        type="text"
-                        style={{ fontFamily: "Arial, sans-serif" }}
-                        readOnly
-                        value={usuario?.nickname || 'Invitado'}
-                        className="pl-7 rounded-md ml-10 h-10 text-[#c4c2c2] bg-[#1F1B1B] outline-none"
-                    />
-                    <img
-                        src={moneda}
-                        alt="icono"
-                        className="absolute w-16 left-121 h- object-cover"
-                    />
-                    <input
-                        type="number"
-                        style={{ fontFamily: "Arial, sans-serif" }}
-                        readOnly
-                        value={usuario?.monedas || 0}
-                        className="pl-7 text-[#c4c2c2] rounded-md h-10 bg-[#1F1B1B] outline-none"
-                    />
-                </div>
+            <div className='flex items-center gap-30'>
+                <img
+                    src={userImg}
+                    alt="icono"
+                    className="absolute w-16 left-5 h-16 object-cover"
+                />
+                <input
+                    type="text"
+                    style={{ fontFamily: "Arial, sans-serif" }}
+                    readOnly
+                    value={usuario?.nickname || 'Invitado'}
+                    className="pl-7 rounded-md ml-10 h-10 text-[#c4c2c2] bg-[#1F1B1B] outline-none"
+                />
+                <img
+                    src={moneda}
+                    alt="icono"
+                    className="absolute w-16 left-121 h- object-cover"
+                />
+                <input
+                    type="number"
+                    style={{ fontFamily: "Arial, sans-serif" }}
+                    readOnly
+                    value={usuario?.monedas || 0}
+                    className="pl-7 text-[#c4c2c2] rounded-md h-10 bg-[#1F1B1B] outline-none"
+                />
+            </div>
 
             <div className='flex items-center gap-10'>
                 {isUser && (
