@@ -5,6 +5,8 @@ import Phaser from 'phaser';
 import Pause from './pause';
 import GameOverModal from './GameOverModal';
 import { useLocation, useNavigate } from 'react-router-dom';
+import apiService from '../api/apiService';
+import { Characters } from '../data/Characters'
 
 interface GameCanvasProps {
     isPaused: boolean;
@@ -52,8 +54,7 @@ type Player = Phaser.Physics.Arcade.Sprite & {
 class GameScene extends Phaser.Scene {
 
     // Estado
-    public onGameOver?: (winner: string, score: string) => void;
-    private currentSkinName: string = "default";
+    public onGameOver?: (winner: string, scoreLeft: number, scoreRight: number) => void;
 
     private player1!: Player;
     private player1Armature!: any;
@@ -300,7 +301,7 @@ class GameScene extends Phaser.Scene {
 
         // Avisar a React
         if (this.onGameOver) {
-            this.onGameOver(result, `${this.scoreLeft} - ${this.scoreRight}`);
+            this.onGameOver(result, this.scoreLeft, this.scoreRight);
         }
     }
 
@@ -436,6 +437,10 @@ class GameScene extends Phaser.Scene {
         const dashVelocity = player.facing === 'right' ? dashSpeed : -dashSpeed;
         player.setVelocity(dashVelocity, 0);
 
+        const skinKey = (player === this.player1) 
+            ? (this.registry.get('p1Skin') || "Santi") 
+            : (this.registry.get('p2Skin') || "Gio");
+
         // Efecto de estela mejorado
         this.time.addEvent({
             delay: 40,
@@ -445,7 +450,7 @@ class GameScene extends Phaser.Scene {
                 const ghost = this.add.spine(player.x, player.y + 10, 'player_anim', spineSource.state.getCurrent(0).animation.name, false);
                 ghost.setScale(spineSource.scaleX, spineSource.scaleY); // Copia dirección y tamaño
 
-                //this.applySkinToSkeleton(ghost.skeleton, this.currentSkinName );
+                this.applySkinToSkeleton(ghost.skeleton, skinKey );
 
                 ghost.setAlpha(0.5);
                 ghost.setDepth(-1);
@@ -513,10 +518,6 @@ class GameScene extends Phaser.Scene {
                 if (slot) {
                     const attachment = skeleton.getAttachment(skeleton.findSlotIndex(map.slot), attachmentName);
                     if (attachment) {
-                        // Parche visual 
-                        if (skinKey === "Gio" && map.suffix === "Mano_Izquierda") {
-                             // attachment.scaleX = 1; 
-                        }
                         slot.setAttachment(attachment);
                     }
                 }
@@ -622,6 +623,7 @@ const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({ isPaused, r
     const [sceneInstance, setSceneInstance] = useState<GameScene | null>(null);
     const navigate = useNavigate();
     const [gameOverData, setGameOverData] = useState<{winner: string, score: string} | null>(null);
+    const [coinsEarned, setCoinsEarned] = useState<number>(0);
 
     const location = useLocation();
     
@@ -672,13 +674,73 @@ const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({ isPaused, r
         game.registry.set('p1Skin', p1Skin);
         game.registry.set('p2Skin', p2Skin);
 
-        // Capturamos la escena cuando esté lista para poder llamar métodos desde React
         game.events.on('ready', () => {
             const scene = game.scene.getScene('GameScene') as GameScene;
             setSceneInstance(scene);
 
-            scene.onGameOver = (winner, score) => {
-                setGameOverData({ winner, score });
+            scene.onGameOver = async (winner, scoreLeft, scoreRight) => {
+                
+                const p1Skin = location.state?.p1Skin || "Santi"; 
+                const p2Skin = location.state?.p2Skin || "Gio"; // Rival
+
+                const characterObj = Characters.find(c => c.skinKey === p1Skin);
+                const idPersonaje = characterObj ? characterObj.id : 1; // Fallback ID 1
+
+                let resultadoDB = 'Empate';
+
+                if (winner.includes("JUGADOR 1")) {
+                    resultadoDB = 'Ganado';
+                } else if (winner.includes("JUGADOR 2")) {
+                    resultadoDB = 'Perdido';
+                }
+
+                try {
+                    const partidoData = {
+                        id_personaje: idPersonaje,
+                        nivel: 1, 
+                        jugador_2: p2Skin,
+                        resultado: resultadoDB,
+                        monedas: 20 ,
+                        goles_favor: scoreLeft, 
+                        goles_contra:scoreRight
+                    };
+
+                    // Llamada 1: Registrar Partido
+                    await apiService.post('/partidos', partidoData);
+                    console.log("✅ Partido registrado en historial");
+
+                    // Llamada 2: Dar Recompensa 
+                        // Recuperar ID de usuario del localStorage para la petición
+                        const userStr = localStorage.getItem('user');
+                        if (userStr) {
+                            const userJson = JSON.parse(userStr);
+                            // Ajusta según tu estructura de objeto usuario
+                            const userId = userJson.usuario?.id_usuario || userJson.id_usuario; 
+
+                            const rewardResp = await apiService.post('/usuarios/recompensa', {
+                                id_usuario: userId,
+                                cantidad: 20
+                            });
+
+                            if (!rewardResp.data.success) {
+                                console.log("💰 Monedas sumadas!");
+                                setCoinsEarned(20);
+                                
+                                // Actualizar Storage para que el Navbar lo refleje
+                                let updatedUser = { ...userJson };
+                                if(updatedUser.usuario) updatedUser.usuario = rewardResp.data.body.usuario;
+                                else updatedUser = rewardResp.data.body.usuario;
+                                
+                                localStorage.setItem('user', JSON.stringify(updatedUser));
+                                window.dispatchEvent(new Event("storage")); 
+                            }
+                        }
+
+                } catch (error) {
+                    console.error("Error guardando partido:", error);
+                    setCoinsEarned(0);
+                }
+                setGameOverData({ winner,   score: `${scoreLeft} - ${scoreRight}` });
             };
         });
 
@@ -725,6 +787,7 @@ const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({ isPaused, r
                 <GameOverModal 
                     winner={gameOverData?.winner ?? ''} 
                     score={gameOverData?.score ?? ''} 
+                    coins={coinsEarned}
                     onRestart={handlePlayAgain} 
                     onExit={handleExit} 
                 />

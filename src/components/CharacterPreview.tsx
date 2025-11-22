@@ -63,11 +63,6 @@ class PreviewScene extends Phaser.Scene {
                     const slotIndex = skeleton.findSlotIndex(map.slot);
                     const attachment = skeleton.getAttachment(slotIndex, attachmentName);
                     if (attachment) {
-                        // PARCHE PARA GIO (Mano Izquierda volteada):
-                        if (attachmentName === "G_Mano_Izquierda") {
-                            attachment.scaleX = -1; 
-                        }
-
                         slot.setAttachment(attachment);
                     } else {
                         console.warn(`Falta imagen: ${attachmentName}`);

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from '../components/navbar.tsx'
 import form from '/img/FormBox.png'
@@ -6,17 +6,91 @@ import drawer from '/img/drawer_wallpaper.png'
 import estadio from '/img/estadioBlur.png'
 
 import CharacterPreview from '../components/CharacterPreview.tsx';
+import MatchHistoryModal from '../components/MatchHistoryModal';
 import { Characters } from '../data/Characters';
+
+import apiService from '../api/apiService.ts';
 
 function App() {
   const [showDrawer, setShowDrawer] = useState(false);
   const [showDrawerConfiguration, setShowDrawerConfiguration] = useState(false);
   const [showVolConfig, setShowVolConfig] = useState(false);
   const [showDrawerAwards, setShowDrawerAwards] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
   const [musicVolume, setMusicVolume] = useState(50);
   const [systemVolume, setSystemVolume] = useState(50);
+
+  const [ownedIds, setOwnedIds] = useState<number[]>([1]);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [isBuy, setIsBuy] = useState(false);
+
+  // Cargar inventario al montar
+  useEffect(() => {
+    apiService.get('/tienda/mis-personajes')
+      .then(res => {
+        if (!res.data.error) setOwnedIds(res.data.body);
+      })
+      .catch(console.error);
+
+      const savedSkin = localStorage.getItem('lastSkin');
+    if (savedSkin) {
+        const idx = Characters.findIndex(c => c.skinKey === savedSkin);
+        if (idx !== -1) {
+            setEquippedIndex(idx);
+            setSelectedIndex(idx); // Sincronizar al inicio
+        }
+    }
+  }, []);
+
+  const handleEquipCharacter = () => {
+      if (ownedIds.includes(selectedChar.id)) {
+          setEquippedIndex(selectedIndex); 
+          setShowDrawer(false); 
+          
+          localStorage.setItem('lastSkin', selectedChar.skinKey);
+      } else {
+          setToastMessage(`Debes comprar a ${selectedChar.name} primero`);
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 3000);
+      }
+  };
+
+  const handleBuy = async () => {
+    try {
+      const response = await apiService.post('/tienda/comprar', {
+        id_personaje: currentChar.id
+      });
+
+      if (!response.data.error) {
+        // 1. Actualizar lista de propiedad
+        setOwnedIds([...ownedIds, currentChar.id]);
+
+        // 2. Actualizar monedas en storage/navbar
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          const userJson = JSON.parse(userStr);
+          userJson.usuario = response.data.body.usuario; // Backend devuelve usuario actualizado
+          localStorage.setItem('user', JSON.stringify(userJson));
+          window.dispatchEvent(new Event("storage"));
+        }
+
+        // 3. Mostrar Toast
+        setToastMessage(`¡${currentChar.name} desbloqueado!`);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+        setIsBuy(true);
+      }
+    } catch (error: unknown) {
+      console.error("Error comprando personaje:", error);
+      setToastMessage(`No se pudo comprar ${currentChar.name}`);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+      setIsBuy(false);
+    }
+  };
 
   const handleReset = () => {
     setMusicVolume(50);
@@ -28,11 +102,17 @@ function App() {
   }
 
   // Estado para el personaje seleccionado
+  const [equippedIndex, setEquippedIndex] = useState<number>(0);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
+
+  // Helpers
+  const equippedChar = Characters[equippedIndex]; 
+  const selectedChar = Characters[selectedIndex]; 
+
   const [isOpenInfo, setIsOpenInfo] = useState(false);
 
   const currentChar = Characters[selectedIndex];
-
+  const isOwned = ownedIds.includes(currentChar.id);
 
   return (
     <>
@@ -55,16 +135,16 @@ function App() {
             animate={{ x: -150, y: 70, opacity: 1 }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
-            <img src={currentChar.flagImg} alt="country" className='fixed z-21 top-42 left-60 w-30 h-30 object-cover rounded-[50%] border-6 border-black' />
+            <img src={equippedChar.flagImg} alt="country" className='fixed z-21 top-42 left-60 w-30 h-30 object-cover rounded-[50%] border-6 border-black' />
 
             <div className='fixed h-100 w-100 top-25 flex justify-center items-center z-20'>
-              <CharacterPreview skin={currentChar.skinKey} />
+              <CharacterPreview skin={equippedChar.skinKey} />
             </div>
 
             <input
               type="text"
               readOnly
-              value={currentChar.name}
+              value={equippedChar.name}
               className="fixed text-center h-14 p-2 w-100 top-50 items-start text-white text-2xl rounded-xl bg-[#1F1B1B] outline-none z-20"
             />
 
@@ -76,7 +156,7 @@ function App() {
               initial={{ opacity: 1, scale: 1 }}
               animate={{ opacity: 1, scale: [1, 1.08, 1] }}
               transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
-              onClick={() => setShowDrawer(true)}
+              onClick={() => { setSelectedIndex(equippedIndex); setShowDrawer(true); }}
             />
             <img src={form} alt="Form" className="w-120 z-0" />
           </motion.div>
@@ -97,61 +177,89 @@ function App() {
                     className="fixed top-25 right-160 text-4xl font-black text-white h-20 rounded cursor-pointer" > ✖ </button>
 
                   {/* Renderizado Dinámico de la lista de personajes */}
-                  {Characters.map((char, index) => (
-                    <div key={char.id} className="relative group">
+                  {Characters.map((char, index) => {
+                    const charOwned = ownedIds.includes(char.id);
+                    return (
+                      <div key={char.id} className="relative group">
 
 
-                      <motion.button
-                        className={`w-42 h-54 bg-cover bg-center rounded-xl transition-all duration-200`}
-                        style={{
-                          // Aquí podrías usar char.faceImg si tuvieras las caras recortadas
-                          backgroundImage: selectedIndex === index
-                            ? "url('/img/character_selected.png')"
-                            : "url('/img/character.png')",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (selectedIndex !== index) {
-                            e.currentTarget.style.backgroundImage = "url('/img/character_hover.png')";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (selectedIndex !== index) {
-                            e.currentTarget.style.backgroundImage = "url('/img/character.png')";
-                          }
-                        }}
-                        initial={{ opacity: 1, scale: 1 }}
-                        animate={{ opacity: 1, scale: [1, 1.05, 1] }}
-                        transition={{
-                          duration: 0.8,
-                          times: [0, 0.5, 1],
-                          ease: "easeInOut",
-                          repeat: Infinity,
-                          repeatDelay: 2,
-                        }}
-                        onClick={() => setSelectedIndex(index)}
-                      />
+                        <motion.button
+                          className={`${charOwned ? '' : 'grayscale brightness-50'} w-42 h-54 bg-cover bg-center rounded-xl transition-all duration-200`}
+                          style={{
+                            // Aquí podrías usar char.faceImg si tuvieras las caras recortadas
+                            backgroundImage: selectedIndex === index
+                              ? "url('/img/character_selected.png')"
+                              : "url('/img/character.png')",
+                          }}
+                          onMouseEnter={(e) => {
+                            if (selectedIndex !== index) {
+                              e.currentTarget.style.backgroundImage = "url('/img/character_hover.png')";
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (selectedIndex !== index) {
+                              e.currentTarget.style.backgroundImage = "url('/img/character.png')";
+                            }
+                          }}
+                          initial={{ opacity: 1, scale: 1 }}
+                          animate={{ opacity: 1, scale: [1, 1.05, 1] }}
+                          transition={{
+                            duration: 0.8,
+                            times: [0, 0.5, 1],
+                            ease: "easeInOut",
+                            repeat: Infinity,
+                            repeatDelay: 2,
+                          }}
+                          onClick={() => setSelectedIndex(index)}
+                        />
 
-                      {/* Tooltip Dinámico */}
-                      <span
-                        className="absolute -top-4 left-1/2 -translate-x-1/2 bg-black text-white 
+                        {/* Tooltip Dinámico */}
+                        <span
+                          className="absolute -top-4 left-1/2 -translate-x-1/2 bg-black text-white 
                         text-m px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 
                         transition-opacity duration-300 pointer-events-none whitespace-nowrap"
-                      >
-                        {char.name}
-                      </span>
-                    </div>
-                  ))}
+                        >
+                          {char.name}
+                        </span>
 
-                  <motion.button
+                        {!charOwned && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span className="text-4xl">🔒</span>
+                            <span className="text-yellow-400 bg-[rgba(0,0,0,0.6)]  rounded-md px-1 py-1 font-black text-xl drop-shadow-md">${char.price}</span>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+
+                  {isOwned ? (
+                    <motion.button
                     className="z-10 absolute w-55 h-20 top-120 bg-cover transition active:scale-95 cursor-pointer"
-                    style={{ backgroundImage: `url('/img/btn_cambiar.png')`, }}
+                    style={{ backgroundImage: `url('/img/btn_cambiar.png')`, 
+                      filter: ownedIds.includes(selectedChar.id) ? 'none' : 'grayscale(100%)'
+                    }}
                     onMouseOver={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_cambiar_hover.png')")}
                     onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_cambiar.png')")}
                     initial={{ opacity: 1, scale: 1 }}
-                    onClick={() => setShowDrawer(false)}
+                    onClick={() => { handleEquipCharacter(); setShowDrawer(false); }}
                     animate={{ opacity: 1, scale: [1, 1.08, 1] }}
                     transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
                   />
+                  ) : (
+                    <motion.button
+                      className="z-10 absolute w-60 h-20 top-120 bg-green-600 text-white text-3xl rounded-xl border-4 border-green-400 shadow-lg
+                       cursor-pointer flex flex-row gap-3 items-center justify-center hover:bg-green-500"
+                      onClick={handleBuy}
+                      initial={{ scale: 1 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <div>COMPRAR</div>
+                      <div className="text-yellow-300 text-3xl flex flex-row items-center gap-1"><img src="/img/coin.png" alt="coin" className='w-10'/>{currentChar.price}</div>
+                    </motion.button>
+                  )}
+
+                  
                 </div>
               </motion.div>
             )}
@@ -179,6 +287,16 @@ function App() {
               />
             </div>
             <div className='fixed bottom-4 gap-10 flex flex-col right-4 mr-10 mb-10'>
+              <motion.button
+                className="relative z-10 w-20 h-20 bg-cover bg-center transition active:scale-95 cursor-pointer"
+                style={{ backgroundImage: `url('/img/btn_reward.png')`, }}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_reward_hover.png')")}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundImage = "url('/img/btn_reward.png')")}
+                initial={{ opacity: 1, scale: 1 }}
+                animate={{ opacity: 1, scale: [1, 1.08, 1] }}
+                transition={{ duration: 0.8, times: [0, 0.5, 1], ease: "easeInOut" }}
+                onClick={() => setShowHistory(true)}
+              />
               <motion.button
                 className="relative z-10 w-20 h-20 bg-cover bg-center transition active:scale-95 cursor-pointer"
                 style={{ backgroundImage: `url('/img/btn_reward.png')`, }}
@@ -218,7 +336,7 @@ function App() {
                 >
                   ✖
                 </button>
-                
+
                 <div className="fixed flex flex-col items-center justify-center left-210 top-45 gap-10">
                   <AnimatePresence mode="wait">
                     {!showVolConfig ? (
@@ -455,7 +573,29 @@ function App() {
                     </div>
                   ))}
                 </div>
+
               </motion.div>
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {showHistory && (
+              <MatchHistoryModal onClose={() => setShowHistory(false)} />
+            )}
+          </AnimatePresence>
+          <AnimatePresence>
+            {showToast && (
+                <motion.div 
+                    initial={{ y: -100, opacity: 0 }}
+                    animate={{ y: 20, opacity: 1 }}
+                    exit={{ y: -100, opacity: 0 }}
+                    {...isBuy ? { 
+                      className:"fixed top-4 left-1/2 -translate-x-1/2 w-100 h-20 bg-cover bg-green-600/90 flex justify-center items-center border-4 rounded-full border-green-800  z-50"}                 
+                    : { 
+                      className:"fixed top-4 left-1/2 -translate-x-1/2 w-100 h-20 bg-cover bg-red-600/90 flex justify-center items-center border-4 rounded-full border-red-800 z-50"
+                     }} 
+                     >    
+                    <span className="text-2xl text-white">{toastMessage}</span>
+                </motion.div>
             )}
           </AnimatePresence>
         </div>

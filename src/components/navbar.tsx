@@ -3,7 +3,7 @@ import { UserIcon, ArrowRightEndOnRectangleIcon } from "@heroicons/react/24/outl
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
-import moneda from '/img/moneda-de-un-dolar.png'
+import moneda from '/img/coin.png'
 import user from '/assets/icons/Santiago_Gimenez_Icon.png'
 
 interface Usuario {
@@ -67,7 +67,7 @@ function Navbar({ isUser = true }: NavbarProps) {
                     <img
                         src={moneda}
                         alt="icono"
-                        className="absolute w-18 left-120 h- object-cover"
+                        className="absolute w-16 left-121 h- object-cover"
                     />
                     <input
                         type="number"

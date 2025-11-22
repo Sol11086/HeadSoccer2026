@@ -13,13 +13,14 @@ export interface CharacterData {
   skinKey: string;
   flagImg: string;
   faceImg: string;
+  price: number;
 }
 
 export const Characters: CharacterData[] = [
-  { id: 0, name: "Santiago Giménez", country: "México", skinKey: "Santi", flagImg: countryMexico, faceImg: "/assets/heads/mexico.png" },
-  { id: 1, name: "Gio Reyna", country: "USA", skinKey: "Gio", flagImg: countryUSA, faceImg: "/assets/heads/usa.png" }, 
-  { id: 2, name: "Alphonso Davies", country: "Canadá", skinKey: "Gio", flagImg: countryCanada, faceImg: "/img/character.png" },
-  { id: 3, name: "Endrick Siap", country: "Brasil", skinKey: "Santi", flagImg: countryBrazil, faceImg: "/img/character.png" }, // Placeholder (usa skin Santi)
-  { id: 4, name: "Musa Al-Taamari", country: "Jordania", skinKey: "Gio", flagImg: countryJordan, faceImg: "/img/character.png" }, // Placeholder
-  { id: 5, name: "Cho Gue-Sung", country: "Corea del Sur", skinKey: "Santi", flagImg: countrySouthKorea, faceImg: "/img/character.png" } // Placeholder
+  { id: 1, name: "Santiago Giménez", country: "México", skinKey: "Santi", flagImg: countryMexico, faceImg: "/assets/heads/mexico.png", price: 0 },
+  { id: 2, name: "Gio Reyna", country: "USA", skinKey: "Gio", flagImg: countryUSA, faceImg: "/assets/heads/usa.png", price: 50 }, 
+  { id: 3, name: "Alphonso Davies", country: "Canadá", skinKey: "Gio", flagImg: countryCanada, faceImg: "/img/character.png", price: 100 },
+  { id: 4, name: "Endrick Siap", country: "Brasil", skinKey: "Santi", flagImg: countryBrazil, faceImg: "/img/character.png", price: 200 }, // Placeholder (usa skin Santi)
+  { id: 5, name: "Musa Al-Taamari", country: "Jordania", skinKey: "Gio", flagImg: countryJordan, faceImg: "/img/character.png", price: 150 }, // Placeholder
+  { id: 6, name: "Cho Gue-Sung", country: "Corea del Sur", skinKey: "Santi", flagImg: countrySouthKorea, faceImg: "/img/character.png", price: 120 } // Placeholder
 ];
