@@ -29,13 +29,13 @@ const GameOverModal = ({ winner, coins, score, onRestart, onExit }: GameOverModa
                         onClick={onRestart}
                         className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white text-2xl rounded-xl shadow-lg transition-transform hover:scale-105 cursor-pointer"
                     >
-                        ⚽ Jugar de Nuevo
+                        Jugar de Nuevo
                     </button>
                     <button
                         onClick={onExit}
                         className="px-8 py-4 bg-red-500 hover:bg-red-600 text-white text-2xl rounded-xl shadow-lg transition-transform hover:scale-105 cursor-pointer"
                     >
-                        🏠 Salir al Menú
+                        Salir al Menú
                     </button>
                 </div>
             </div>

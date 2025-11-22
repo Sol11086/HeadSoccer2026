@@ -7,6 +7,7 @@ import alertSucces from '/img/succesAlert.png'
 import errorSucces from '/img/errorAlert.png'
 import Navbar from "../components/navbar";
 import apiService from "../api/apiService";
+import ProfileImageModal from "../components/ProfileImageModal";
 
 interface Usuario {
     id_usuario: number;
@@ -31,6 +32,10 @@ function InfoUser() {
     const [correo, setCorreo] = useState("");
     const [contrasena, setContrasena] = useState("");
     const [fechaNacimiento, setFechaNacimiento] = useState("");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [profileImage, setProfileImage] = useState(mcLovin);
+    const [errorMessage, setErrorMessage] = useState("");
+
     const handleChanges = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         console.log("Enviando cambios:", { id_usuario: usuario?.id_usuario, nickname, correo, contrasena, fechaNacimiento, monedas: usuario?.monedas });
@@ -62,6 +67,7 @@ function InfoUser() {
         } catch (error: any) {
             if (error.response) {
                 console.error(error.response.data.body || 'Error: Credenciales incorrectas');
+               
                 setShowError(true);
 
                 setTimeout(() => {
@@ -112,8 +118,8 @@ function InfoUser() {
                         transition={{ duration: 0.4, ease: "easeOut" }}
                         className="fixed top-6 right-6 z-50 items-center text-center shadow-lg"
                     >
-                        <span className="w-full right-15 top-7 text-center absolute text-white mb-2 text-lg drop-shadow">
-                           Error inesperado
+                        <span className="w-full right-7 top-7 text-center absolute text-white mb-2 text-lg drop-shadow">
+                            Error al actualizar el usuario.
                         </span>
 
                         <img
@@ -143,15 +149,16 @@ function InfoUser() {
                             >
                                 ←
                             </button>
-                            <div className="clip-octagon w-80 h-80 border-4 border-[#24262e] overflow-hidden">
+                            <div className="w-80 h-80 overflow-hidden">
                                 <img
-                                    src={mcLovin}
+                                    src={profileImage}
                                     alt="avatar"
                                     className="w-full h-full object-cover"
                                 />
                             </div>
                             <button
                                 type="button"
+                                onClick={() => setIsModalOpen(true)}
                                 className="mt-2 text-amber-500 text-xl underline decoration-2"
                             >
                                 Cambiar imagen
@@ -205,6 +212,11 @@ function InfoUser() {
                     </div>
                 </motion.div>
             </div>
+            {isModalOpen && (
+                <ProfileImageModal
+                    onClose={() => setIsModalOpen(false)}
+                    onSelectImage={(img) => setProfileImage(img)} />
+            )}
         </>
     );
 }
