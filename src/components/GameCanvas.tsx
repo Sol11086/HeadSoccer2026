@@ -157,8 +157,8 @@ class GameScene extends Phaser.Scene {
 
         // 1. Activar depuración visual
         // (Esto dibuja huesos, nombres de slots y bordes)
-        this.player1Armature.drawDebug = true;
-        this.player2Armature.drawDebug = true;
+        this.player1Armature.drawDebug = false;
+        this.player2Armature.drawDebug = false;
 
         // 2. Imprimir en consola qué demonios tiene cargado el esqueleto
         console.log("--- DIAGNÓSTICO SPINE ---");
@@ -505,7 +505,7 @@ class GameScene extends Phaser.Scene {
 
         // Obtener prefijo (Fallback a G_ si no existe para evitar crash)
         const prefix = prefixMap[skinKey] || "G_";
-        console.log(`🔍 Aplicando Skin: ${skinKey} | Prefijo: ${prefix}`);
+        
         const mappings = [
             { slot: "G_Cabeza", suffix: "Cabeza" },
             { slot: "G_Cuerpo", suffix: "Cuerpo" },
@@ -659,7 +659,7 @@ const GameCanvas = forwardRef<HTMLCanvasElement, GameCanvasProps>(({ isPaused, r
             physics: {
                 default: 'arcade',
                 arcade: {
-                    debug: true,
+                    debug: false,
                     fps: 60,
                 },
             },
